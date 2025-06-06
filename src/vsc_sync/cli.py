@@ -154,7 +154,7 @@ def apply(
         None, "--stack", help="Tech stack to apply (can be used multiple times)"
     ),
     backup: bool = typer.Option(
-        False, "--backup", help="Create backup before applying"
+        True, "--backup/--no-backup", help="Create backup before applying (default: enabled)"
     ),
     backup_suffix: Optional[str] = typer.Option(
         None, "--backup-suffix", help="Custom backup suffix"
@@ -220,6 +220,50 @@ def status(
 
     except VscSyncError as e:
         console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def setup_project(
+    project_path: str = typer.Argument(
+        ".", help="Path to the project directory (defaults to current directory)"
+    ),
+    stack: Optional[list[str]] = typer.Option(
+        None, "--stack", help="Tech stack(s) to use for project setup (can be used multiple times)"
+    ),
+    from_project_type: Optional[str] = typer.Option(
+        None, "--from-project-type", help="Use predefined project type as base configuration"
+    ),
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Overwrite existing .vscode files without prompting"
+    ),
+) -> None:
+    """Set up .vscode/ configuration files for a project."""
+    try:
+        from pathlib import Path
+        from .commands.setup_project_cmd import SetupProjectCommand
+
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        setup_command = SetupProjectCommand(config_manager)
+        setup_command.run(
+            project_path=Path(project_path),
+            stacks=stack,
+            from_project_type=from_project_type,
+            force=force,
+        )
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Setup cancelled by user.[/yellow]")
         raise typer.Exit(1)
 
 

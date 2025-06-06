@@ -16,6 +16,21 @@ class AppManager:
     """Manages VSCode-like applications and their configurations."""
 
     @staticmethod
+    def get_extension_directory(app_alias: str) -> Path:
+        """Get the extension directory for a specific app."""
+        home = Path.home()
+        extension_dirs = {
+            "vscode": home / ".vscode" / "extensions",
+            "vscodium": home / ".vscode-oss" / "extensions", 
+            "cursor": home / ".cursor" / "extensions",
+            "windsurf": home / ".windsurf" / "extensions",
+            "void": home / ".void" / "extensions",
+            "pearai": home / ".pearai" / "extensions"
+        }
+        
+        return extension_dirs.get(app_alias, home / f".{app_alias}" / "extensions")
+    
+    @staticmethod
     def get_default_app_paths() -> Dict[str, Dict[str, Path]]:
         """Get default configuration paths for common VSCode-like applications."""
         system = platform.system()
