@@ -211,15 +211,24 @@ def status(
 ) -> None:
     """Show configuration status for applications."""
     try:
-        # TODO: Implement status logic
-        console.print(f"[yellow]Status functionality coming soon![/yellow]")
-        if app_alias:
-            console.print(f"Will check status for '{app_alias}'")
-        else:
-            console.print("Will check status for all registered apps")
+        from .commands.status_cmd import StatusCommand
+
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        status_command = StatusCommand(config_manager)
+        status_command.run(app_alias=app_alias, stacks=stack)
 
     except VscSyncError as e:
         console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Status check cancelled by user.[/yellow]")
         raise typer.Exit(1)
 
 

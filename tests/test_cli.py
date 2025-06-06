@@ -60,8 +60,18 @@ class TestCLICommands:
         assert result.exit_code == 0
         assert "coming soon" in result.stdout.lower()
 
-    def test_status_command(self):
-        """Test status command structure."""
+    def test_status_command_basic(self):
+        """Test status command basic functionality."""
         result = runner.invoke(app, ["status"])
+        # Status command should work even if not properly initialized
+        # It will either show system configuration or empty state
         assert result.exit_code == 0
-        assert "coming soon" in result.stdout.lower()
+        assert len(result.stdout.strip()) > 0
+
+    def test_status_command_help(self):
+        """Test status command help."""
+        result = runner.invoke(app, ["status", "--help"])
+        assert result.exit_code == 0
+        assert "Show configuration status for applications" in result.stdout
+        assert "app_alias" in result.stdout
+        assert "--stack" in result.stdout
