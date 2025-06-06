@@ -277,6 +277,41 @@ def setup_project(
 
 
 @app.command()
+def edit(
+    layer_type: str = typer.Argument(..., help="Layer type: base, app, stack, project"),
+    layer_name: Optional[str] = typer.Argument(None, help="Layer name (not needed for base)"),
+    file_type: str = typer.Option(
+        "settings", "--file-type", "-t", help="File type: settings, keybindings, extensions, snippets"
+    ),
+) -> None:
+    """Open configuration files for editing."""
+    try:
+        from .commands.edit_cmd import EditCommand
+
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        edit_command = EditCommand(config_manager)
+        edit_command.run(
+            layer_type=layer_type,
+            layer_name=layer_name,
+            file_type=file_type,
+        )
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Edit cancelled by user.[/yellow]")
+        raise typer.Exit(1)
+
+
+@app.command()
 def discover(
     add_found: bool = typer.Option(
         False, "--add", help="Automatically add discovered apps to configuration"

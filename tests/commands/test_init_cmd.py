@@ -59,10 +59,18 @@ class TestInitCommand:
             str(temp_dir / "new-vscode-configs"),  # Repository path
         ]
         mock_confirm.side_effect = [
-            False,  # Don't review apps individually
+            False,  # Don't review apps individually  
             False,  # Don't add more apps manually
+            False,  # Additional confirm for any other prompts
         ]
-        mock_discover.return_value = {}  # No apps discovered
+        # Mock discovered apps to avoid forced manual addition
+        mock_discover.return_value = {
+            "vscode": AppDetails(
+                alias="vscode",
+                config_path=temp_dir / "vscode_config",
+                executable_path=Path("/usr/bin/code"),
+            )
+        }
 
         init_cmd = InitCommand(config_manager)
         init_cmd.run()
@@ -70,7 +78,8 @@ class TestInitCommand:
         # Check that config was created
         assert config_manager.config_path.exists()
         config = config_manager.load_config()
-        assert config.vscode_configs_path == temp_dir / "new-vscode-configs"
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert config.vscode_configs_path.resolve() == (temp_dir / "new-vscode-configs").resolve()
 
         # Check that repository structure was created
         repo_path = temp_dir / "new-vscode-configs"
@@ -105,15 +114,24 @@ class TestInitCommand:
         mock_confirm.side_effect = [
             False,  # Don't review apps individually
             False,  # Don't add more apps manually
+            False,  # Additional confirm for any other prompts
         ]
-        mock_discover.return_value = {}  # No apps discovered
+        # Mock discovered apps to avoid forced manual addition  
+        mock_discover.return_value = {
+            "cursor": AppDetails(
+                alias="cursor",
+                config_path=temp_dir / "cursor_config", 
+                executable_path=Path("/usr/bin/cursor"),
+            )
+        }
 
         init_cmd = InitCommand(config_manager)
         init_cmd.run()
 
         # Check that config was created with correct repo path
         config = config_manager.load_config()
-        assert config.vscode_configs_path == mock_vscode_configs_repo
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert config.vscode_configs_path.resolve() == mock_vscode_configs_repo.resolve()
 
     @patch("vsc_sync.commands.init_cmd.Confirm.ask")
     @patch("vsc_sync.commands.init_cmd.Prompt.ask")
@@ -154,7 +172,8 @@ class TestInitCommand:
         # Check that app was included
         config = config_manager.load_config()
         assert "vscode" in config.managed_apps
-        assert config.managed_apps["vscode"].config_path == app_config_dir
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert config.managed_apps["vscode"].config_path.resolve() == app_config_dir.resolve()
 
     def test_setup_config_path_default(self, temp_dir):
         """Test setting up config path with default."""
@@ -171,7 +190,8 @@ class TestInitCommand:
 
         custom_path = str(temp_dir / "custom-config.json")
         path = init_cmd._setup_config_path(custom_path)
-        assert path == temp_dir / "custom-config.json"
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert path.resolve() == (temp_dir / "custom-config.json").resolve()
 
     def test_verify_local_repo_valid(self, temp_dir, mock_vscode_configs_repo):
         """Test verifying a valid local repository."""
@@ -179,7 +199,8 @@ class TestInitCommand:
         init_cmd = InitCommand(config_manager)
 
         path = init_cmd._verify_local_repo(str(mock_vscode_configs_repo))
-        assert path == mock_vscode_configs_repo
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert path.resolve() == mock_vscode_configs_repo.resolve()
 
     def test_verify_local_repo_nonexistent(self, temp_dir):
         """Test verifying a nonexistent local repository."""
@@ -215,7 +236,8 @@ class TestInitCommand:
         mock_confirm.return_value = True  # User confirms to continue
 
         path = init_cmd._verify_local_repo(str(incomplete_repo))
-        assert path == incomplete_repo
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert path.resolve() == incomplete_repo.resolve()
 
     @patch("vsc_sync.commands.init_cmd.Confirm.ask")
     def test_verify_local_repo_incomplete_structure_cancel(
@@ -282,8 +304,11 @@ class TestInitCommand:
         repo_url = "https://github.com/user/vscode-configs.git"
         path = init_cmd._clone_repository(repo_url)
 
-        mock_clone.assert_called_once_with(repo_url, temp_dir / "cloned-repo")
-        assert path == temp_dir / "cloned-repo"
+        # Use resolve() to handle /private/var vs /var differences on macOS in assertion
+        expected_path = (temp_dir / "cloned-repo").resolve()
+        actual_call_path = mock_clone.call_args[0][1].resolve()
+        assert actual_call_path == expected_path
+        assert path.resolve() == expected_path
 
     @patch("vsc_sync.commands.init_cmd.GitOperations.is_git_available")
     def test_clone_repository_no_git(self, mock_git_available, temp_dir):
@@ -326,7 +351,8 @@ class TestInitCommand:
 
         assert result is not None
         assert result.alias == "new-alias"
-        assert result.config_path == config_dir
+        # Use resolve() to handle /private/var vs /var differences on macOS
+        assert result.config_path.resolve() == config_dir.resolve()
         assert result.executable_path == Path("/usr/bin/new-exec")
 
     @patch("vsc_sync.commands.init_cmd.Prompt.ask")
