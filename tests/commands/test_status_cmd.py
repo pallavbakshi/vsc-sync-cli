@@ -838,7 +838,7 @@ class TestStatusCommand:
         )
 
         # Should not raise exception
-        status_cmd._compare_configurations(app_details, merge_result)
+        status_cmd._compare_configurations(app_details, merge_result, [])
 
     def test_get_app_status_summary_with_unknown_status(self, temp_dir, mock_vscode_configs_repo):
         """Test app status summary when some components have unknown status."""
@@ -1062,3 +1062,102 @@ class TestStatusCommand:
 
         # Should not raise exception and should show in sync
         status_cmd._compare_snippets(app_details, [])
+
+    def test_generate_edit_suggestions_basic(self, temp_dir, mock_vscode_configs_repo):
+        """Test generating basic edit suggestions."""
+        config_manager = ConfigManager(temp_dir / "config.json")
+        
+        app_details = AppDetails(
+            alias="test-vscode",
+            config_path=temp_dir / "vscode_config",
+            executable_path=Path("/usr/bin/code"),
+        )
+        
+        config = VscSyncConfig(
+            vscode_configs_path=mock_vscode_configs_repo,
+            managed_apps={"test-vscode": app_details},
+        )
+        config_manager.save_config(config)
+        
+        command = StatusCommand(config_manager)
+        suggestions = command._generate_edit_suggestions("cursor")
+        
+        assert suggestions["live_settings"] == "vsc-sync edit live cursor"
+        assert suggestions["live_keybindings"] == "vsc-sync edit live cursor --file-type keybindings"
+        assert suggestions["app_settings"] == "vsc-sync edit app cursor"
+        assert suggestions["base_settings"] == "vsc-sync edit base"
+
+    def test_generate_edit_suggestions_with_stacks(self, temp_dir, mock_vscode_configs_repo):
+        """Test generating edit suggestions with stacks."""
+        config_manager = ConfigManager(temp_dir / "config.json")
+        
+        app_details = AppDetails(
+            alias="test-vscode",
+            config_path=temp_dir / "vscode_config",
+            executable_path=Path("/usr/bin/code"),
+        )
+        
+        config = VscSyncConfig(
+            vscode_configs_path=mock_vscode_configs_repo,
+            managed_apps={"test-vscode": app_details},
+        )
+        config_manager.save_config(config)
+        
+        command = StatusCommand(config_manager)
+        suggestions = command._generate_edit_suggestions("vscode", ["python", "web-dev"])
+        
+        assert suggestions["stack_python_settings"] == "vsc-sync edit stack python"
+        assert suggestions["stack_python_keybindings"] == "vsc-sync edit stack python --file-type keybindings"
+        assert suggestions["stack_web-dev_settings"] == "vsc-sync edit stack web-dev"
+        assert suggestions["stack_web-dev_keybindings"] == "vsc-sync edit stack web-dev --file-type keybindings"
+
+    @patch('rich.console.Console.print')
+    def test_show_edit_suggestions_for_settings(self, mock_print, temp_dir, mock_vscode_configs_repo):
+        """Test showing edit suggestions for settings."""
+        config_manager = ConfigManager(temp_dir / "config.json")
+        
+        app_details = AppDetails(
+            alias="test-vscode",
+            config_path=temp_dir / "vscode_config",
+            executable_path=Path("/usr/bin/code"),
+        )
+        
+        config = VscSyncConfig(
+            vscode_configs_path=mock_vscode_configs_repo,
+            managed_apps={"test-vscode": app_details},
+        )
+        config_manager.save_config(config)
+        
+        command = StatusCommand(config_manager)
+        command._show_edit_suggestions_for_settings("cursor", ["python"])
+        
+        # Check that appropriate suggestions were printed
+        mock_print.assert_any_call(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        mock_print.assert_any_call(f"    Edit live app config:  [cyan]vsc-sync edit live cursor[/cyan]")
+        mock_print.assert_any_call(f"    Edit app layer:        [cyan]vsc-sync edit app cursor[/cyan]")
+        mock_print.assert_any_call(f"    Edit python stack:       [cyan]vsc-sync edit stack python[/cyan]")
+
+    @patch('rich.console.Console.print')
+    def test_show_edit_suggestions_for_keybindings(self, mock_print, temp_dir, mock_vscode_configs_repo):
+        """Test showing edit suggestions for keybindings."""
+        config_manager = ConfigManager(temp_dir / "config.json")
+        
+        app_details = AppDetails(
+            alias="test-vscode",
+            config_path=temp_dir / "vscode_config",
+            executable_path=Path("/usr/bin/code"),
+        )
+        
+        config = VscSyncConfig(
+            vscode_configs_path=mock_vscode_configs_repo,
+            managed_apps={"test-vscode": app_details},
+        )
+        config_manager.save_config(config)
+        
+        command = StatusCommand(config_manager)
+        command._show_edit_suggestions_for_keybindings("vscode", [])
+        
+        # Check that appropriate suggestions were printed
+        mock_print.assert_any_call(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        mock_print.assert_any_call(f"    Edit live app config:  [cyan]vsc-sync edit live vscode --file-type keybindings[/cyan]")
+        mock_print.assert_any_call(f"    Edit app layer:        [cyan]vsc-sync edit app vscode --file-type keybindings[/cyan]")

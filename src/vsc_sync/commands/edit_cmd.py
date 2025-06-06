@@ -26,7 +26,8 @@ LAYER_TYPE_PATHS = {
     "base": "base",
     "app": "apps",
     "stack": "stacks", 
-    "project": "projects"
+    "project": "projects",
+    "live": None  # Special case for actual app configs
 }
 
 
@@ -86,13 +87,13 @@ class EditCommand:
             )
 
         # layer_name is required for non-base layers
-        if layer_type != "base" and not layer_name:
+        if layer_type not in ["base"] and not layer_name:
             raise VscSyncError(
                 f"Layer name is required for layer type '{layer_type}'"
             )
 
-        # Validate app layer names against registered apps
-        if layer_type == "app" and layer_name not in self.config.managed_apps:
+        # Validate app layer names against registered apps (for both 'app' and 'live')
+        if layer_type in ["app", "live"] and layer_name not in self.config.managed_apps:
             available_apps = list(self.config.managed_apps.keys())
             raise VscSyncError(
                 f"App '{layer_name}' is not registered. "
@@ -103,6 +104,16 @@ class EditCommand:
         self, layer_type: str, layer_name: Optional[str], file_type: str
     ) -> Path:
         """Construct the full path to the configuration file."""
+        
+        # Special handling for live app configs
+        if layer_type == "live":
+            app_details = self.config.managed_apps[layer_name]
+            if file_type == "snippets":
+                return app_details.config_path / FILE_TYPE_MAPPING[file_type]
+            else:
+                return app_details.config_path / FILE_TYPE_MAPPING[file_type]
+        
+        # Normal handling for vscode-configs repository files
         configs_path = self.config.vscode_configs_path
         
         if layer_type == "base":

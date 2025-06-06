@@ -55,6 +55,12 @@ class TestEditCommand:
         # Should not raise
         command._validate_inputs("app", "vscode", "settings")
 
+    def test_validate_inputs_valid_live(self, mock_config_manager):
+        """Test validate inputs for live layer."""
+        command = EditCommand(mock_config_manager)
+        # Should not raise
+        command._validate_inputs("live", "cursor", "settings")
+
     def test_validate_inputs_invalid_layer_type(self, mock_config_manager):
         """Test validate inputs with invalid layer type."""
         command = EditCommand(mock_config_manager)
@@ -79,6 +85,12 @@ class TestEditCommand:
         with pytest.raises(VscSyncError, match="App 'unregistered' is not registered"):
             command._validate_inputs("app", "unregistered", "settings")
 
+    def test_validate_inputs_unregistered_live_app(self, mock_config_manager):
+        """Test validate inputs with unregistered live app."""
+        command = EditCommand(mock_config_manager)
+        with pytest.raises(VscSyncError, match="App 'unregistered' is not registered"):
+            command._validate_inputs("live", "unregistered", "settings")
+
     def test_construct_file_path_base(self, mock_config_manager, tmp_path):
         """Test construct file path for base layer."""
         command = EditCommand(mock_config_manager)
@@ -98,6 +110,20 @@ class TestEditCommand:
         command = EditCommand(mock_config_manager)
         path = command._construct_file_path("stack", "python", "snippets")
         expected = tmp_path / "vscode-configs" / "stacks" / "python" / "snippets"
+        assert path == expected
+
+    def test_construct_file_path_live_settings(self, mock_config_manager, tmp_path):
+        """Test construct file path for live app settings."""
+        command = EditCommand(mock_config_manager)
+        path = command._construct_file_path("live", "vscode", "settings")
+        expected = tmp_path / "vscode" / "settings.json"
+        assert path == expected
+
+    def test_construct_file_path_live_snippets(self, mock_config_manager, tmp_path):
+        """Test construct file path for live app snippets."""
+        command = EditCommand(mock_config_manager)
+        path = command._construct_file_path("live", "cursor", "snippets")
+        expected = tmp_path / "cursor" / "snippets"
         assert path == expected
 
     def test_get_initial_content_settings(self, mock_config_manager):
@@ -195,3 +221,22 @@ class TestEditCommand:
         
         # Editor should not be called
         mock_run.assert_not_called()
+
+    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
+    def test_run_live_app_existing_file(self, mock_run, mock_config_manager, tmp_path):
+        """Test successful run with existing live app file."""
+        # Setup live app config file
+        app_config_path = tmp_path / "vscode"
+        app_config_path.mkdir()
+        settings_file = app_config_path / "settings.json"
+        settings_file.write_text('{"editor.fontSize": 14}')
+        
+        mock_run.return_value = Mock()  # Mock successful editor execution
+        
+        command = EditCommand(mock_config_manager)
+        
+        # Should not raise
+        command.run("live", "vscode", "settings")
+        
+        # Verify editor was called (once for --version check, once for opening file)
+        assert mock_run.call_count == 2

@@ -278,7 +278,7 @@ def setup_project(
 
 @app.command()
 def edit(
-    layer_type: str = typer.Argument(..., help="Layer type: base, app, stack, project"),
+    layer_type: str = typer.Argument(..., help="Layer type: base, app, stack, project, live"),
     layer_name: Optional[str] = typer.Argument(None, help="Layer name (not needed for base)"),
     file_type: str = typer.Option(
         "settings", "--file-type", "-t", help="File type: settings, keybindings, extensions, snippets"
