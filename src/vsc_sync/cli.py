@@ -1,0 +1,286 @@
+"""Main CLI application for vsc-sync."""
+
+import logging
+from typing import Optional
+
+import typer
+from rich.console import Console
+from rich.table import Table
+
+from . import __version__
+from .config import ConfigManager
+from .core.app_manager import AppManager
+from .core.config_manager import LayerConfigManager
+from .exceptions import VscSyncError
+from .utils import setup_logging
+
+# Create the main Typer app
+app = typer.Typer(
+    name="vsc-sync",
+    help="Synchronize VSCode-like configurations across multiple editors",
+    rich_markup_mode="rich",
+    no_args_is_help=True,
+)
+
+console = Console()
+
+
+def version_callback(value: bool) -> None:
+    """Show version information."""
+    if value:
+        console.print(f"vsc-sync version {__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Enable verbose output"
+    ),
+    version: Optional[bool] = typer.Option(
+        None, "--version", callback=version_callback, help="Show version"
+    ),
+) -> None:
+    """vsc-sync: Synchronize VSCode-like configurations across multiple editors."""
+    setup_logging(verbose)
+
+
+@app.command()
+def init(
+    repo: Optional[str] = typer.Option(
+        None, "--repo", help="Git URL or local path to vscode-configs repository"
+    ),
+    config_file: Optional[str] = typer.Option(
+        None, "--config-file", help="Path to store vsc-sync configuration"
+    ),
+) -> None:
+    """Initialize vsc-sync for first-time use."""
+    try:
+        from .commands.init_cmd import InitCommand
+
+        config_manager = ConfigManager()
+        init_command = InitCommand(config_manager)
+        init_command.run(repo=repo, config_file=config_file)
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Initialization cancelled by user.[/yellow]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def add_app(
+    alias: str = typer.Argument(..., help="Unique alias for the application"),
+    config_path: str = typer.Argument(
+        ..., help="Path to the app's user configuration directory"
+    ),
+    executable: Optional[str] = typer.Option(
+        None, "--executable", help="Path to the app's executable"
+    ),
+) -> None:
+    """Register a new VSCode-like application."""
+    try:
+        # TODO: Implement add-app logic
+        console.print(f"[yellow]Add-app functionality coming soon![/yellow]")
+        console.print(f"Will register app '{alias}' with config path: {config_path}")
+        if executable:
+            console.print(f"Executable: {executable}")
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def list_apps(
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed information"
+    ),
+) -> None:
+    """List all registered applications."""
+    try:
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        config = config_manager.load_config()
+
+        if not config.managed_apps:
+            console.print("No applications registered yet.")
+            console.print(
+                "Use 'vsc-sync add-app' to register applications or 'vsc-sync init' to auto-discover."
+            )
+            return
+
+        table = Table(title="Registered Applications")
+        table.add_column("Alias", style="cyan")
+        table.add_column("Config Path", style="green")
+
+        if verbose:
+            table.add_column("Executable", style="yellow")
+            table.add_column("Status", style="magenta")
+
+        for alias, app_details in config.managed_apps.items():
+            row = [alias, str(app_details.config_path)]
+
+            if verbose:
+                exec_path = (
+                    str(app_details.executable_path)
+                    if app_details.executable_path
+                    else "Not set"
+                )
+                status = "✓" if app_details.config_path.exists() else "✗"
+                row.extend([exec_path, status])
+
+            table.add_row(*row)
+
+        console.print(table)
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def apply(
+    app_alias: str = typer.Argument(..., help="Alias of the target application"),
+    stack: Optional[list[str]] = typer.Option(
+        None, "--stack", help="Tech stack to apply (can be used multiple times)"
+    ),
+    backup: bool = typer.Option(
+        False, "--backup", help="Create backup before applying"
+    ),
+    backup_suffix: Optional[str] = typer.Option(
+        None, "--backup-suffix", help="Custom backup suffix"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-n", help="Show what would be done without applying"
+    ),
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Force overwrite without prompting"
+    ),
+    prune_extensions: bool = typer.Option(
+        False, "--prune-extensions", help="Uninstall extensions not in configuration"
+    ),
+) -> None:
+    """Apply configurations to an application."""
+    try:
+        from .commands.apply_cmd import ApplyCommand
+
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        apply_command = ApplyCommand(config_manager)
+        apply_command.run(
+            app_alias=app_alias,
+            stacks=stack,
+            backup=backup,
+            backup_suffix=backup_suffix,
+            dry_run=dry_run,
+            force=force,
+            prune_extensions=prune_extensions,
+        )
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Apply cancelled by user.[/yellow]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def status(
+    app_alias: Optional[str] = typer.Argument(
+        None, help="App alias to check (if not provided, checks all)"
+    ),
+    stack: Optional[list[str]] = typer.Option(
+        None, "--stack", help="Stacks to consider for comparison"
+    ),
+) -> None:
+    """Show configuration status for applications."""
+    try:
+        # TODO: Implement status logic
+        console.print(f"[yellow]Status functionality coming soon![/yellow]")
+        if app_alias:
+            console.print(f"Will check status for '{app_alias}'")
+        else:
+            console.print("Will check status for all registered apps")
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def discover(
+    add_found: bool = typer.Option(
+        False, "--add", help="Automatically add discovered apps to configuration"
+    ),
+) -> None:
+    """Discover VSCode-like applications on the system."""
+    try:
+        console.print("Discovering VSCode-like applications...")
+
+        discovered_apps = AppManager.auto_discover_apps()
+
+        if not discovered_apps:
+            console.print("No VSCode-like applications found.")
+            return
+
+        table = Table(title="Discovered Applications")
+        table.add_column("Alias", style="cyan")
+        table.add_column("Config Path", style="green")
+        table.add_column("Executable", style="yellow")
+        table.add_column("Status", style="magenta")
+
+        for alias, app_details in discovered_apps.items():
+            exec_status = (
+                "✓"
+                if (
+                    app_details.executable_path and app_details.executable_path.exists()
+                )
+                else "✗"
+            )
+            config_status = "✓" if app_details.config_path.exists() else "✗"
+            status = f"Config: {config_status} | Exec: {exec_status}"
+
+            table.add_row(
+                alias,
+                str(app_details.config_path),
+                (
+                    str(app_details.executable_path)
+                    if app_details.executable_path
+                    else "Not found"
+                ),
+                status,
+            )
+
+        console.print(table)
+
+        if add_found:
+            console.print("[yellow]Auto-add functionality coming soon![/yellow]")
+        else:
+            console.print(
+                "\nUse 'vsc-sync discover --add' to automatically add these to your configuration."
+            )
+            console.print("Or use 'vsc-sync add-app' to add them individually.")
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+
+
+if __name__ == "__main__":
+    app()
