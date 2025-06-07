@@ -1,6 +1,7 @@
 """Main CLI application for vsc-sync."""
 
 import logging
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -273,6 +274,92 @@ def setup_project(
         raise typer.Exit(1)
     except KeyboardInterrupt:
         console.print("\n[yellow]Setup cancelled by user.[/yellow]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def pull(
+    app_alias: Optional[str] = typer.Argument(None, help="Alias of the source application (required unless --from-project is used)"),
+    layer_type: str = typer.Option(..., "--to", help="Target layer type: base, app, stack, project"),
+    layer_name: Optional[str] = typer.Argument(None, help="Layer name (required for stack, optional for app/project)"),
+    from_project: Optional[str] = typer.Option(
+        None, "--from-project", help="Pull from project .vscode directory instead of app"
+    ),
+    include_extensions: bool = typer.Option(
+        False, "--include-extensions", help="Pull installed extensions list (not available for project mode)"
+    ),
+    include_keybindings: bool = typer.Option(
+        False, "--include-keybindings", help="Pull keybindings.json"
+    ),
+    include_snippets: bool = typer.Option(
+        False, "--include-snippets", help="Pull snippets directory"
+    ),
+    settings_only: bool = typer.Option(
+        False, "--settings-only", help="Only pull settings.json (default if no other flags specified)"
+    ),
+    overwrite: bool = typer.Option(
+        False, "--overwrite", help="Overwrite existing files without prompting"
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", "-n", help="Show what would be pulled without making changes"
+    ),
+    full_preview: bool = typer.Option(
+        False, "--full-preview", help="Show full content preview in pager (like git diff)"
+    ),
+    no_pager: bool = typer.Option(
+        False, "--no-pager", help="Disable pager for full preview output"
+    ),
+) -> None:
+    """Pull configurations from an application or project to the repository."""
+    try:
+        from .commands.pull_cmd import PullCommand
+
+        config_manager = ConfigManager()
+
+        if not config_manager.is_initialized():
+            console.print(
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+            )
+            raise typer.Exit(1)
+
+        # Validate arguments
+        if from_project and app_alias:
+            console.print("[red]Error:[/red] Cannot specify both app_alias and --from-project")
+            raise typer.Exit(1)
+        
+        if not from_project and not app_alias:
+            console.print("[red]Error:[/red] Must specify either app_alias or --from-project")
+            raise typer.Exit(1)
+        
+        # Warn about extensions in project mode
+        if from_project and include_extensions:
+            console.print("[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring")
+            include_extensions = False
+        
+        # Convert from_project to Path if provided
+        project_path = Path(from_project) if from_project else None
+
+        pull_command = PullCommand(config_manager)
+        pull_command.run(
+            app_alias=app_alias,
+            layer_type=layer_type,
+            layer_name=layer_name,
+            project_path=project_path,
+            include_extensions=include_extensions,
+            include_keybindings=include_keybindings,
+            include_snippets=include_snippets,
+            settings_only=settings_only,
+            overwrite=overwrite,
+            dry_run=dry_run,
+            full_preview=full_preview,
+            no_pager=no_pager,
+        )
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise typer.Exit(1)
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Pull cancelled by user.[/yellow]")
         raise typer.Exit(1)
 
 
