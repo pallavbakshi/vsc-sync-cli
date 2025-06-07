@@ -43,6 +43,10 @@ class ApplyCommand:
         force: bool = False,
         prune_extensions: bool = False,
         tasks: bool = True,
+        include_settings: bool = True,
+        include_keybindings: bool = True,
+        include_extensions: bool = True,
+        include_snippets: bool = True,
     ) -> None:
         """Execute the apply command."""
         try:
@@ -59,7 +63,13 @@ class ApplyCommand:
 
             # Step 3: Clean user directory for fresh start
             if not dry_run:
-                self._clean_user_directory(app_details)
+                self._clean_user_directory(
+                    app_details,
+                    include_settings,
+                    include_keybindings,
+                    include_snippets,
+                    tasks,
+                )
 
             # Step 4: Merge configuration layers
             stacks = stacks or []
@@ -73,23 +83,54 @@ class ApplyCommand:
             if dry_run:
                 # Step 6a: Dry run - show differences
                 self._show_dry_run_results(
-                    app_details, merge_result, prune_extensions, tasks
+                    app_details,
+                    merge_result,
+                    prune_extensions,
+                    tasks,
+                    include_settings,
+                    include_keybindings,
+                    include_extensions,
+                    include_snippets,
                 )
             else:
                 # Step 6b: Actually apply changes
-                if not force and not self._confirm_apply(app_details, merge_result):
+                if not force and not self._confirm_apply(
+                    app_details,
+                    merge_result,
+                    include_settings=include_settings,
+                    include_keybindings=include_keybindings,
+                    include_extensions=include_extensions,
+                    include_snippets=include_snippets,
+                ):
                     console.print("[yellow]Apply cancelled by user.[/yellow]")
                     return
 
                 # Ask about extension cleaning
-                clean_extensions = self._prompt_extension_cleaning(
-                    app_details, merge_result
-                )
+                clean_extensions = False
+                if include_extensions:
+                    clean_extensions = self._prompt_extension_cleaning(
+                        app_details, merge_result
+                    )
 
                 self._apply_configurations(
-                    app_details, merge_result, prune_extensions, clean_extensions, tasks
+                    app_details,
+                    merge_result,
+                    prune_extensions,
+                    clean_extensions,
+                    tasks,
+                    include_settings,
+                    include_keybindings,
+                    include_extensions,
+                    include_snippets,
                 )
-                self._show_success_message(app_details, merge_result)
+                self._show_success_message(
+                    app_details,
+                    merge_result,
+                    include_settings=include_settings,
+                    include_keybindings=include_keybindings,
+                    include_extensions=include_extensions,
+                    include_snippets=include_snippets,
+                )
 
         except Exception as e:
             console.print(f"[red]Apply failed:[/red] {e}")
@@ -129,8 +170,15 @@ class ApplyCommand:
         console.print(f"[green]Backup created:[/green] {backup_path}")
         return backup_path
 
-    def _clean_user_directory(self, app_details: AppDetails) -> None:
-        """Remove only the configuration files we manage, preserving app data."""
+    def _clean_user_directory(
+        self,
+        app_details: AppDetails,
+        include_settings: bool,
+        include_keybindings: bool,
+        include_snippets: bool,
+        tasks_enabled: bool,
+    ) -> None:
+        """Remove the files that will be overwritten (respect component flags)."""
         if not app_details.config_path.exists():
             # Create the directory if it doesn't exist
             app_details.config_path.mkdir(parents=True, exist_ok=True)
@@ -143,13 +191,15 @@ class ApplyCommand:
             f"[yellow]Cleaning managed config files in:[/yellow] {app_details.config_path}"
         )
 
-        # Files we manage - remove these for a clean slate
-        managed_files = [
-            "settings.json",
-            "keybindings.json",
-            "tasks.json",
-            "snippets",  # Directory
-        ]
+        managed_files: list[str] = []
+        if include_settings:
+            managed_files.append("settings.json")
+        if include_keybindings:
+            managed_files.append("keybindings.json")
+        if tasks_enabled:
+            managed_files.append("tasks.json")
+        if include_snippets:
+            managed_files.append("snippets")
 
         cleaned_count = 0
         for item_name in managed_files:
@@ -202,27 +252,31 @@ class ApplyCommand:
         merge_result: MergeResult,
         prune_extensions: bool,
         tasks_enabled: bool,
+        include_settings: bool = True,
+        include_keybindings: bool = True,
+        include_extensions: bool = True,
+        include_snippets: bool = True,
     ) -> None:
         """Show what would change in a dry run."""
         console.print("\n[bold yellow]DRY RUN - No changes will be made[/bold yellow]")
 
-        # Show settings.json changes
-        self._show_settings_diff(app_details, merge_result.merged_settings)
+        if include_settings:
+            self._show_settings_diff(app_details, merge_result.merged_settings)
 
-        # Show keybindings.json changes
-        self._show_keybindings_diff(app_details, merge_result.keybindings_source)
+        if include_keybindings:
+            self._show_keybindings_diff(app_details, merge_result.keybindings_source)
 
-        # Show snippets changes
-        self._show_snippets_diff(app_details, merge_result.snippets_paths)
+        if include_snippets:
+            self._show_snippets_diff(app_details, merge_result.snippets_paths)
 
-        # Show tasks changes
         if tasks_enabled:
             self._show_tasks_diff(app_details, merge_result.tasks_source)
 
         # Show extension changes
-        self._show_extensions_diff(
-            app_details, merge_result.extensions, prune_extensions
-        )
+        if include_extensions:
+            self._show_extensions_diff(
+                app_details, merge_result.extensions, prune_extensions
+            )
 
     def _show_settings_diff(
         self, app_details: AppDetails, merged_settings: Dict
@@ -421,7 +475,14 @@ class ApplyCommand:
             console.print("[green]No extension changes needed[/green]")
 
     def _confirm_apply(
-        self, app_details: AppDetails, merge_result: MergeResult
+        self,
+        app_details: AppDetails,
+        merge_result: MergeResult,
+        *,
+        include_settings: bool,
+        include_keybindings: bool,
+        include_extensions: bool,
+        include_snippets: bool,
     ) -> bool:
         """Ask user to confirm applying changes."""
         console.print(
@@ -429,14 +490,14 @@ class ApplyCommand:
         )
         console.print(f"Target directory: [cyan]{app_details.config_path}[/cyan]")
 
-        changes_summary = []
-        if merge_result.merged_settings:
+        changes_summary: list[str] = []
+        if include_settings and merge_result.merged_settings:
             changes_summary.append("settings.json")
-        if merge_result.keybindings_source:
+        if include_keybindings and merge_result.keybindings_source:
             changes_summary.append("keybindings.json")
-        if merge_result.snippets_paths:
+        if include_snippets and merge_result.snippets_paths:
             changes_summary.append("snippets")
-        if merge_result.extensions:
+        if include_extensions and merge_result.extensions:
             changes_summary.append("extensions")
 
         if changes_summary:
@@ -475,16 +536,20 @@ class ApplyCommand:
         prune_extensions: bool,
         clean_extensions: bool = False,
         tasks_enabled: bool = True,
+        include_settings: bool = True,
+        include_keybindings: bool = True,
+        include_extensions: bool = True,
+        include_snippets: bool = True,
     ) -> None:
         """Actually apply the configurations."""
         console.print("\n[bold]Applying configurations...[/bold]")
 
         # Apply settings.json
-        if merge_result.merged_settings:
+        if include_settings and merge_result.merged_settings:
             self._apply_settings(app_details, merge_result.merged_settings)
 
         # Apply keybindings.json
-        if merge_result.keybindings_source:
+        if include_keybindings and merge_result.keybindings_source:
             self._apply_keybindings(app_details, merge_result.keybindings_source)
 
         # Apply tasks.json
@@ -492,7 +557,7 @@ class ApplyCommand:
             self._apply_tasks(app_details, merge_result.tasks_source)
 
         # Apply snippets
-        if merge_result.snippets_paths:
+        if include_snippets and merge_result.snippets_paths:
             self._apply_snippets(app_details, merge_result.snippets_paths)
 
         # Clean extensions directory if requested
@@ -500,7 +565,7 @@ class ApplyCommand:
             self._clean_extensions_directory(app_details)
 
         # Apply extensions
-        if merge_result.extensions:
+        if include_extensions and merge_result.extensions:
             self._apply_extensions(
                 app_details, merge_result.extensions, prune_extensions, clean_extensions
             )
@@ -638,21 +703,28 @@ class ApplyCommand:
             console.print(f"[red]Extension management failed:[/red] {e}")
 
     def _show_success_message(
-        self, app_details: AppDetails, merge_result: MergeResult
+        self,
+        app_details: AppDetails,
+        merge_result: MergeResult,
+        *,
+        include_settings: bool,
+        include_keybindings: bool,
+        include_extensions: bool,
+        include_snippets: bool,
     ) -> None:
         """Show success message after applying configurations."""
         console.print(
             f"\n[bold green]✓ Configuration successfully applied to {app_details.alias}![/bold green]"
         )
 
-        applied_components = []
-        if merge_result.merged_settings:
+        applied_components: list[str] = []
+        if include_settings and merge_result.merged_settings:
             applied_components.append("settings")
-        if merge_result.keybindings_source:
+        if include_keybindings and merge_result.keybindings_source:
             applied_components.append("keybindings")
-        if merge_result.snippets_paths:
+        if include_snippets and merge_result.snippets_paths:
             applied_components.append("snippets")
-        if merge_result.extensions:
+        if include_extensions and merge_result.extensions:
             applied_components.append("extensions")
 
         if applied_components:

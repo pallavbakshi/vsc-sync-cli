@@ -201,6 +201,10 @@ class TestApplyCommand:
             prune_extensions=False,
             clean_extensions=False,
             tasks_enabled=False,
+            include_settings=False,
+            include_keybindings=False,
+            include_extensions=False,
+            include_snippets=False,
         )
 
         # tasks.json should not be copied
@@ -393,7 +397,14 @@ class TestApplyCommand:
 
         mock_confirm.return_value = True
 
-        result = apply_cmd._confirm_apply(app_details, merge_result)
+        result = apply_cmd._confirm_apply(
+            app_details,
+            merge_result,
+            include_settings=True,
+            include_keybindings=True,
+            include_extensions=True,
+            include_snippets=True,
+        )
         assert result is True
 
     @patch("vsc_sync.commands.apply_cmd.Confirm.ask")
@@ -424,7 +435,14 @@ class TestApplyCommand:
 
         mock_confirm.return_value = False
 
-        result = apply_cmd._confirm_apply(app_details, merge_result)
+        result = apply_cmd._confirm_apply(
+            app_details,
+            merge_result,
+            include_settings=False,
+            include_keybindings=False,
+            include_extensions=False,
+            include_snippets=False,
+        )
         assert result is False
 
     @patch("vsc_sync.commands.apply_cmd.Confirm.ask")

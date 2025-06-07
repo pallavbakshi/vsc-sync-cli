@@ -74,7 +74,6 @@ can revert unintended changes.
 
 * `--diff` – print patch instead of writing files.
 * `--no-tasks` – skip syncing tasks.json (enabled by default).
-* `--only <component>` – restrict operation to `extensions`, `settings`, `snippets`, `tasks`.
 * `--force` – overwrite local changes even if conflict detected.
 
 ### Sorting keybindings
@@ -92,5 +91,32 @@ The command will:
 3. Rewrite the file with 2-space indentation.
 
 If you omit `--yes` you’ll be prompted before the file is overwritten.
+
+### Applying selectively
+
+By default `vsc-sync apply` writes **all** components (settings, keybindings,
+extensions, snippets, tasks).  Use the additive flags below to restrict what
+gets applied:
+
+| Flag | Effect |
+|------|--------|
+| `--settings` | Include `settings.json`. If **no** component flag is provided, settings are included by default. |
+| `--keybindings` | Include `keybindings.json`. |
+| `--extensions` | Manage extensions (install and—if `--prune-extensions` is also given—uninstall). |
+| `--snippets` | Copy the `snippets` directory. |
+| `--tasks / --no-tasks` | Include or skip `tasks.json` (tasks are synced by default). |
+
+Examples
+
+```bash
+# Only apply keybindings.json (nothing else will be touched)
+vsc-sync apply vscode --keybindings
+
+# Apply settings and extensions, leave snippets & keybindings untouched
+vsc-sync apply vscode --settings --extensions --no-tasks
+```
+
+If none of the component flags are specified, the command behaves as before
+and syncs everything.
 
 See `vsc-sync <command> --help` for all options.

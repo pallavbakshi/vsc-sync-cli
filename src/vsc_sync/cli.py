@@ -171,6 +171,20 @@ def apply(
     prune_extensions: bool = typer.Option(
         False, "--prune-extensions", help="Uninstall extensions not in configuration"
     ),
+
+    # Component selection flags
+    settings_flag: bool = typer.Option(
+        False, "--settings", help="Apply settings.json"
+    ),
+    keybindings_flag: bool = typer.Option(
+        False, "--keybindings", help="Apply keybindings.json"
+    ),
+    extensions_flag: bool = typer.Option(
+        False, "--extensions", help="Manage extensions"
+    ),
+    snippets_flag: bool = typer.Option(
+        False, "--snippets", help="Copy snippets"
+    ),
     tasks: bool = typer.Option(
         True, "--tasks/--no-tasks", help="Sync tasks.json (default: yes)"
     ),
@@ -188,6 +202,16 @@ def apply(
             raise typer.Exit(1)
 
         apply_command = ApplyCommand(config_manager)
+        # Determine components; if none specified => all True
+        specified = any(
+            [settings_flag, keybindings_flag, extensions_flag, snippets_flag]
+        )
+
+        include_settings = settings_flag or not specified
+        include_keybindings = keybindings_flag or not specified
+        include_extensions = extensions_flag or not specified
+        include_snippets = snippets_flag or not specified
+
         apply_command.run(
             app_alias=app_alias,
             stacks=stack,
@@ -197,6 +221,10 @@ def apply(
             force=force,
             prune_extensions=prune_extensions,
             tasks=tasks,
+            include_settings=include_settings,
+            include_keybindings=include_keybindings,
+            include_extensions=include_extensions,
+            include_snippets=include_snippets,
         )
 
     except VscSyncError as e:
