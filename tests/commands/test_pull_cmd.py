@@ -249,7 +249,6 @@ class TestPullCommand:
                 include_extensions=False,
                 include_keybindings=False,
                 include_snippets=False,
-                settings_only=True,
                 overwrite=True,
                 dry_run=dry_run,
             )
@@ -452,7 +451,6 @@ class TestPullCommand:
                 include_extensions=False,  # Should be ignored in project mode
                 include_keybindings=False,
                 include_snippets=False,
-                settings_only=True,
                 overwrite=True,
                 dry_run=False,
             )
@@ -484,8 +482,7 @@ class TestPullCommand:
             project_path=project_dir,
             include_extensions=False,
             include_keybindings=False,
-            include_snippets=False,
-            settings_only=True,
+                include_snippets=False,
             overwrite=True,
             dry_run=True,
         )
@@ -506,7 +503,7 @@ class TestPullCommand:
                 layer_type="base",
                 layer_name=None,
                 project_path=None,
-                settings_only=True,
+            # include_settings default True
                 overwrite=True,
                 dry_run=True,
             )

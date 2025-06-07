@@ -242,7 +242,7 @@ class EditCommand:
             # Confirmation
             if not yes:
                 console.print(
-                    f"This will overwrite [bold]{file_path}[/bold] with the sorted list (\[entries: {len(unique_bindings)}; duplicates removed: {duplicates_removed}])."
+                    f"This will overwrite [bold]{file_path}[/bold] with the sorted list ([entries: {len(unique_bindings)}; duplicates removed: {duplicates_removed}])."
                 )
                 if not Confirm.ask("Proceed?", default=True):
                     console.print("[yellow]Sort cancelled.[/yellow]")

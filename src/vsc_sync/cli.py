@@ -307,21 +307,19 @@ def pull(
         "--from-project",
         help="Pull from project .vscode directory instead of app",
     ),
-    include_extensions: bool = typer.Option(
-        False,
-        "--include-extensions",
-        help="Pull installed extensions list (not available for project mode)",
+    settings: bool = typer.Option(
+        True,
+        "--settings/--no-settings",
+        help="Include settings.json (default: yes)",
     ),
-    include_keybindings: bool = typer.Option(
-        False, "--include-keybindings", help="Pull keybindings.json"
+    keybindings: bool = typer.Option(
+        False, "--keybindings", help="Include keybindings.json"
     ),
-    include_snippets: bool = typer.Option(
-        False, "--include-snippets", help="Pull snippets directory"
+    extensions: bool = typer.Option(
+        False, "--extensions", help="Include extensions list"
     ),
-    settings_only: bool = typer.Option(
-        False,
-        "--settings-only",
-        help="Only pull settings.json (default if no other flags specified)",
+    snippets: bool = typer.Option(
+        False, "--snippets", help="Include snippets directory"
     ),
     overwrite: bool = typer.Option(
         False, "--overwrite", help="Overwrite existing files without prompting"
@@ -367,11 +365,11 @@ def pull(
             raise typer.Exit(1)
 
         # Warn about extensions in project mode
-        if from_project and include_extensions:
+        if from_project and extensions:
             console.print(
                 "[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring"
             )
-            include_extensions = False
+            extensions = False
 
         # Convert from_project to Path if provided
         project_path = Path(from_project) if from_project else None
@@ -382,10 +380,10 @@ def pull(
             layer_type=layer_type,
             layer_name=layer_name,
             project_path=project_path,
-            include_extensions=include_extensions,
-            include_keybindings=include_keybindings,
-            include_snippets=include_snippets,
-            settings_only=settings_only,
+            include_settings=settings,
+            include_keybindings=keybindings,
+            include_extensions=extensions,
+            include_snippets=snippets,
             overwrite=overwrite,
             dry_run=dry_run,
             full_preview=full_preview,

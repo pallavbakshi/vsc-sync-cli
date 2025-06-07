@@ -36,10 +36,10 @@ class PullCommand:
         layer_type: Optional[str] = None,
         layer_name: Optional[str] = None,
         project_path: Optional[Path] = None,
-        include_extensions: bool = False,
+        include_settings: bool = True,
         include_keybindings: bool = False,
+        include_extensions: bool = False,
         include_snippets: bool = False,
-        settings_only: bool = False,
         overwrite: bool = False,
         dry_run: bool = False,
         full_preview: bool = False,
@@ -87,10 +87,7 @@ class PullCommand:
                     layer_type, layer_name, app_alias
                 )
 
-            # Step 3: Determine what to pull
-            pull_settings = settings_only or not any(
-                [include_extensions, include_keybindings, include_snippets]
-            )
+            pull_settings = include_settings
 
             # Step 4: Show what will be pulled
             self._show_pull_summary(
@@ -106,11 +103,11 @@ class PullCommand:
                 # Step 5a: Dry run - show what would be pulled
                 self._show_dry_run_results(
                     source_details,
-                    target_layer_path,
-                    pull_settings,
-                    include_extensions,
-                    include_keybindings,
-                    include_snippets,
+                target_layer_path,
+                pull_settings,
+                include_extensions,
+                include_keybindings,
+                include_snippets,
                     full_preview,
                     no_pager,
                 )
