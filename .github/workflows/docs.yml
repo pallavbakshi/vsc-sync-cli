@@ -1,0 +1,35 @@
+name: Docs
+
+on:
+  push:
+    branches: [main]
+
+# Allow the workflow to push to the gh-pages branch.
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install MkDocs stack
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs mkdocs-material \
+                     'mkdocstrings[python]' \
+                     mkdocs-gen-files \
+                     mkdocs-section-index \
+                     mkdocs-git-revision-date-localized-plugin
+
+      - name: Deploy documentation to GitHub Pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdocs gh-deploy --clean --force

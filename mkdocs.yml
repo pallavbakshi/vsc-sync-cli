@@ -1,0 +1,60 @@
+site_name: VSC Sync CLI
+site_url: https://example.com/vsc-sync-cli/
+repo_url: https://github.com/your-org/vsc-sync-cli
+
+# Material for MkDocs theme
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.sections
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+
+plugins:
+  - search
+  # Clean “/section/” URLs instead of “/section/index/”
+  - section-index
+  # Show human-readable Git timestamps on pages
+  - git-revision-date-localized:
+      enable_creation_date: false
+  # Generate stub files for API reference automatically
+  - gen-files:
+      scripts:
+        - docs/scripts/gen_api_pages.py
+  # Auto-render docstrings and type hints as reference pages
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["src"]
+          options:
+            docstring_style: google
+            show_source: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: installation.md
+      - Quick Start: tutorials/quick-start.md
+      - Template Config Repo: template-config.md
+  - Usage Guide: usage.md
+  - Behind the Scenes:
+      - How It Works: how-it-works.md
+      - Layer Precedence: behind-the-scenes/layer-precedence.md
+  - For Developers:
+      - Developer Guide: for-developers.md
+      - Architecture Overview: for-developers/architecture.md
+      - Docs Hosting: for-developers/docs-hosting.md
+  - API Reference:
+      - vsc_sync: reference/vsc_sync.md
+  - Changelog: changelog.md
+
+# Treat broken links as errors once docs stabilise
+# strict: true
