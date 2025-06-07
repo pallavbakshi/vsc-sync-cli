@@ -11,6 +11,7 @@ layout and trim whatever you don’t need – the tool works fine with only the
 │   ├── settings.json
 │   ├── keybindings.json
 │   ├── extensions.json
+│   ├── tasks.json
 │   └── snippets/
 │       └── global.code-snippets
 │
@@ -19,6 +20,7 @@ layout and trim whatever you don’t need – the tool works fine with only the
 │   │   ├── settings.json
 │   │   ├── keybindings.json
 │   │   ├── extensions.json
+│   │   ├── tasks.json
 │   │   └── snippets/python.code-snippets
 │   └── javascript/
 │       ├── settings.json
@@ -30,6 +32,7 @@ layout and trim whatever you don’t need – the tool works fine with only the
 │   │   ├── settings.json
 │   │   ├── keybindings.json
 │   │   └── extensions.json
+│   │   └── tasks.json
 │   └── vscodium/
 │       ├── settings.json
 │       └── extensions.json
@@ -59,5 +62,8 @@ layout and trim whatever you don’t need – the tool works fine with only the
 
 Each overlay can override or extend keys.  Lists (like extensions) are merged
 uniquely so duplicates are removed.
+
+`tasks.json` follows the same *winner-takes-all* rule as `keybindings.json` –
+only the file from the highest-priority layer is copied.
 
 

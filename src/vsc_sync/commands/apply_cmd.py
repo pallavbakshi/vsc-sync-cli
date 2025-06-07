@@ -42,6 +42,7 @@ class ApplyCommand:
         dry_run: bool = False,
         force: bool = False,
         prune_extensions: bool = False,
+        tasks: bool = True,
     ) -> None:
         """Execute the apply command."""
         try:
@@ -71,7 +72,7 @@ class ApplyCommand:
 
             if dry_run:
                 # Step 6a: Dry run - show differences
-                self._show_dry_run_results(app_details, merge_result, prune_extensions)
+                self._show_dry_run_results(app_details, merge_result, prune_extensions, tasks)
             else:
                 # Step 6b: Actually apply changes
                 if not force and not self._confirm_apply(app_details, merge_result):
@@ -81,7 +82,7 @@ class ApplyCommand:
                 # Ask about extension cleaning
                 clean_extensions = self._prompt_extension_cleaning(app_details, merge_result)
                 
-                self._apply_configurations(app_details, merge_result, prune_extensions, clean_extensions)
+                self._apply_configurations(app_details, merge_result, prune_extensions, clean_extensions, tasks)
                 self._show_success_message(app_details, merge_result)
 
         except Exception as e:
@@ -136,6 +137,7 @@ class ApplyCommand:
         managed_files = [
             "settings.json",
             "keybindings.json",
+            "tasks.json",
             "snippets",  # Directory
         ]
         
@@ -183,7 +185,11 @@ class ApplyCommand:
             console.print(f"[bold]Stacks:[/bold] {', '.join(stacks)}")
 
     def _show_dry_run_results(
-        self, app_details: AppDetails, merge_result: MergeResult, prune_extensions: bool
+        self,
+        app_details: AppDetails,
+        merge_result: MergeResult,
+        prune_extensions: bool,
+        tasks_enabled: bool,
     ) -> None:
         """Show what would change in a dry run."""
         console.print("\n[bold yellow]DRY RUN - No changes will be made[/bold yellow]")
@@ -196,6 +202,10 @@ class ApplyCommand:
 
         # Show snippets changes
         self._show_snippets_diff(app_details, merge_result.snippets_paths)
+
+        # Show tasks changes
+        if tasks_enabled:
+            self._show_tasks_diff(app_details, merge_result.tasks_source)
 
         # Show extension changes
         self._show_extensions_diff(
@@ -296,6 +306,31 @@ class ApplyCommand:
                 console.print("[dim]Will keep existing keybindings.json[/dim]")
             else:
                 console.print("[dim]No keybindings.json to apply[/dim]")
+
+    def _show_tasks_diff(self, app_details: AppDetails, tasks_source: Optional[Path]) -> None:
+        """Show tasks.json changes during dry run."""
+        console.print("\n[bold]Tasks.json changes:[/bold]")
+
+        current_tasks_file = app_details.config_path / "tasks.json"
+
+        if tasks_source:
+            if current_tasks_file.exists():
+                current_content = current_tasks_file.read_text()
+                new_content = tasks_source.read_text()
+
+                if current_content == new_content:
+                    console.print("[green]No changes needed[/green]")
+                else:
+                    console.print(
+                        f"[yellow]Will replace with:[/yellow] {tasks_source}"
+                    )
+            else:
+                console.print(f"[green]Will create from:[/green] {tasks_source}")
+        else:
+            if current_tasks_file.exists():
+                console.print("[dim]Will keep existing tasks.json[/dim]")
+            else:
+                console.print("[dim]No tasks.json to apply[/dim]")
 
     def _show_snippets_diff(
         self, app_details: AppDetails, snippets_paths: List[Path]
@@ -414,7 +449,12 @@ class ApplyCommand:
         return Confirm.ask("Clean extensions directory?", default=False)
 
     def _apply_configurations(
-        self, app_details: AppDetails, merge_result: MergeResult, prune_extensions: bool, clean_extensions: bool = False
+        self,
+        app_details: AppDetails,
+        merge_result: MergeResult,
+        prune_extensions: bool,
+        clean_extensions: bool = False,
+        tasks_enabled: bool = True,
     ) -> None:
         """Actually apply the configurations."""
         console.print("\n[bold]Applying configurations...[/bold]")
@@ -426,6 +466,10 @@ class ApplyCommand:
         # Apply keybindings.json
         if merge_result.keybindings_source:
             self._apply_keybindings(app_details, merge_result.keybindings_source)
+
+        # Apply tasks.json
+        if tasks_enabled and merge_result.tasks_source:
+            self._apply_tasks(app_details, merge_result.tasks_source)
 
         # Apply snippets
         if merge_result.snippets_paths:
@@ -440,6 +484,14 @@ class ApplyCommand:
             self._apply_extensions(
                 app_details, merge_result.extensions, prune_extensions, clean_extensions
             )
+
+    def _apply_tasks(self, app_details: AppDetails, tasks_source: Path) -> None:
+        """Apply tasks.json from source layer."""
+        tasks_file = app_details.config_path / "tasks.json"
+        console.print(f"[cyan]Writing tasks.json...[/cyan]")
+
+        FileOperations.copy_file(tasks_source, tasks_file)
+        console.print(f"[green]✓[/green] Tasks applied")
 
     def _apply_settings(self, app_details: AppDetails, merged_settings: Dict) -> None:
         """Apply merged settings.json."""

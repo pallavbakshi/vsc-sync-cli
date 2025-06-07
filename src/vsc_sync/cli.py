@@ -169,6 +169,9 @@ def apply(
     prune_extensions: bool = typer.Option(
         False, "--prune-extensions", help="Uninstall extensions not in configuration"
     ),
+    tasks: bool = typer.Option(
+        True, "--tasks/--no-tasks", help="Sync tasks.json (default: yes)"
+    ),
 ) -> None:
     """Apply configurations to an application."""
     try:
@@ -191,6 +194,7 @@ def apply(
             dry_run=dry_run,
             force=force,
             prune_extensions=prune_extensions,
+            tasks=tasks,
         )
 
     except VscSyncError as e:

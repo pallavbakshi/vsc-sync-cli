@@ -17,9 +17,10 @@ console = Console()
 
 FILE_TYPE_MAPPING = {
     "settings": "settings.json",
-    "keybindings": "keybindings.json", 
+    "keybindings": "keybindings.json",
+    "tasks": "tasks.json",
     "extensions": "extensions.json",
-    "snippets": "snippets"
+    "snippets": "snippets",
 }
 
 LAYER_TYPE_PATHS = {
@@ -159,6 +160,8 @@ class EditCommand:
             return "[\n]\n"
         elif file_type == "extensions":
             return '{\n  "recommendations": [\n  ]\n}\n'
+        elif file_type == "tasks":
+            return '{\n  "version": "2.0.0",\n  "tasks": []\n}\n'
         else:
             return "{}\n"
 

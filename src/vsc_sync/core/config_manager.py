@@ -108,6 +108,16 @@ class LayerConfigManager:
 
         return None
 
+    def find_tasks_file(self, layers: List[LayerInfo]) -> Optional[Path]:
+        """Find tasks.json from the most specific layer that has it."""
+        # Check layers in reverse precedence (most specific first)
+        for layer in reversed(layers):
+            tasks_file = layer.path / "tasks.json"
+            if tasks_file.exists():
+                return tasks_file
+
+        return None
+
     def collect_snippets(self, layers: List[LayerInfo]) -> List[Path]:
         """Collect snippet directories/files from all layers."""
         snippets_paths = []
@@ -168,10 +178,12 @@ class LayerConfigManager:
         extensions = self.collect_extensions(layers)
         keybindings_source = self.find_keybindings(layers)
         snippets_paths = self.collect_snippets(layers)
+        tasks_source = self.find_tasks_file(layers)
 
         return MergeResult(
             merged_settings=merged_settings,
             keybindings_source=keybindings_source,
+            tasks_source=tasks_source,
             extensions=extensions,
             snippets_paths=snippets_paths,
             layers_applied=layers,

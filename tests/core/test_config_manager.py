@@ -141,6 +141,47 @@ class TestLayerConfigManager:
             keybindings_path == mock_vscode_configs_repo / "base" / "keybindings.json"
         )
 
+    # -------------------- Tasks.json Support --------------------
+
+    def test_find_tasks_file_precedence(self, temp_dir):
+        """Ensure tasks.json is selected from most specific layer."""
+        # Build minimal repo structure with tasks in different layers
+        repo = temp_dir / "repo"
+        (repo / "base").mkdir(parents=True)
+        (repo / "base" / "tasks.json").write_text("{}")
+
+        app_layer = repo / "apps" / "cursor"
+        app_layer.mkdir(parents=True)
+        (app_layer / "tasks.json").write_text('{"label": "build"}')
+
+        stack_layer = repo / "stacks" / "python"
+        stack_layer.mkdir(parents=True)
+        (stack_layer / "tasks.json").write_text('{"label": "lint"}')
+
+        manager = LayerConfigManager(repo)
+
+        from vsc_sync.models import LayerInfo
+
+        layers = [
+            LayerInfo(layer_type="base", path=repo / "base"),
+            LayerInfo(layer_type="app", layer_name="cursor", path=app_layer),
+            LayerInfo(layer_type="stack", layer_name="python", path=stack_layer),
+        ]
+
+        # stack should win
+        tasks_path = manager.find_tasks_file(layers)
+        assert tasks_path == stack_layer / "tasks.json"
+
+    def test_merge_layers_tasks_source(self, temp_dir):
+        """tasks_source should be populated in MergeResult."""
+        repo = temp_dir / "repo"
+        (repo / "base").mkdir(parents=True)
+        (repo / "base" / "settings.json").write_text("{}"); (repo / "base" / "tasks.json").write_text("{}")
+
+        manager = LayerConfigManager(repo)
+        result = manager.merge_layers(app_alias=None, stacks=None)
+        assert result.tasks_source == repo / "base" / "tasks.json"
+
     def test_collect_snippets(self, mock_vscode_configs_repo):
         """Test collecting snippet directories."""
         manager = LayerConfigManager(mock_vscode_configs_repo)

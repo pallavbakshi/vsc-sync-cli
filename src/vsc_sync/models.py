@@ -69,6 +69,7 @@ class MergeResult(BaseModel):
 
     merged_settings: Dict[str, Any] = Field(default_factory=dict)
     keybindings_source: Optional[Path] = Field(None)
+    tasks_source: Optional[Path] = Field(None)
     extensions: List[str] = Field(default_factory=list)
     snippets_paths: List[Path] = Field(default_factory=list)
     layers_applied: List[LayerInfo] = Field(default_factory=list)

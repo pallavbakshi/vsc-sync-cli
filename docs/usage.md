@@ -6,7 +6,7 @@ After [installing](installation.md) the CLI there are six high-level commands yo
 |---------|---------|
 | `init`  | Bootstrap a fresh machine by cloning the dot-files repository |
 | `status`| Show diff between local VS Code config and repository |
-| `apply` | Pull remote changes **and** write them into your local VS Code profile |
+| `apply` | Pull remote changes **and** write them into your local VS Code profile (settings, keybindings, **tasks**, snippets, extensions) |
 | `edit`  | Push your current VS Code config to the repository |
 | `pull`  | Pull remote repository without touching local VS Code files |
 | `setup-project` | Create a per-project sync config (workspaces) |
@@ -46,7 +46,8 @@ vsc-sync edit --dry-run --verbose
 ## Advanced flags
 
 * `--diff` – print patch instead of writing files.
-* `--only <component>` – restrict operation to `extensions`, `settings`, `snippets`.
+* `--no-tasks` – skip syncing tasks.json (enabled by default).
+* `--only <component>` – restrict operation to `extensions`, `settings`, `snippets`, `tasks`.
 * `--force` – overwrite local changes even if conflict detected.
 
 See `vsc-sync <command> --help` for all options.

@@ -9,7 +9,7 @@ import pytest
 from vsc_sync.commands.apply_cmd import ApplyCommand
 from vsc_sync.config import ConfigManager
 from vsc_sync.exceptions import AppConfigPathError, VscSyncError
-from vsc_sync.models import AppDetails, VscSyncConfig
+from vsc_sync.models import AppDetails, VscSyncConfig, MergeResult
 
 
 class TestApplyCommand:
@@ -157,6 +157,44 @@ class TestApplyCommand:
 
         settings_file = app_config_dir / "settings.json"
         assert settings_file.exists()
+
+    def test_apply_tasks_respect_flag(self, temp_dir):
+        """_apply_configurations should skip tasks when tasks_enabled is False."""
+        from vsc_sync.commands.apply_cmd import ApplyCommand
+
+        # Setup app details and config manager stub
+        app_config_dir = temp_dir / "user_config"
+        app_config_dir.mkdir()
+
+        app_details = AppDetails(
+            alias="vscode",
+            config_path=app_config_dir,
+            executable_path=Path("/usr/bin/code"),
+        )
+
+        # Create a tasks source file
+        tasks_src = temp_dir / "tasks.json"
+        tasks_src.write_text("{}")
+
+        merge_result = MergeResult(
+            merged_settings={},
+            keybindings_source=None,
+            extensions=[],
+            snippets_paths=[],
+            layers_applied=[],
+            tasks_source=tasks_src,
+        )
+
+        config_manager = ConfigManager(temp_dir / "cfg.json")
+        cmd = ApplyCommand(config_manager)
+
+        # Apply with tasks disabled
+        cmd._apply_configurations(
+            app_details, merge_result, prune_extensions=False, clean_extensions=False, tasks_enabled=False
+        )
+
+        # tasks.json should not be copied
+        assert not (app_config_dir / "tasks.json").exists()
 
         saved_settings = json.loads(settings_file.read_text())
         assert saved_settings == test_settings

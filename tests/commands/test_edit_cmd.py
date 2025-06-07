@@ -144,6 +144,12 @@ class TestEditCommand:
         content = command._get_initial_content("keybindings")
         assert content == "[\n]\n"
 
+    def test_get_initial_content_tasks(self, mock_config_manager):
+        """Test get initial content for tasks file."""
+        command = EditCommand(mock_config_manager)
+        content = command._get_initial_content("tasks")
+        assert "\"version\"" in content and "\"tasks\"" in content
+
     @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
     def test_get_editor_finds_code(self, mock_run, mock_config_manager):
         """Test get editor finds code executable."""
