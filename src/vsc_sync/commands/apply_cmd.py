@@ -72,7 +72,9 @@ class ApplyCommand:
 
             if dry_run:
                 # Step 6a: Dry run - show differences
-                self._show_dry_run_results(app_details, merge_result, prune_extensions, tasks)
+                self._show_dry_run_results(
+                    app_details, merge_result, prune_extensions, tasks
+                )
             else:
                 # Step 6b: Actually apply changes
                 if not force and not self._confirm_apply(app_details, merge_result):
@@ -80,9 +82,13 @@ class ApplyCommand:
                     return
 
                 # Ask about extension cleaning
-                clean_extensions = self._prompt_extension_cleaning(app_details, merge_result)
-                
-                self._apply_configurations(app_details, merge_result, prune_extensions, clean_extensions, tasks)
+                clean_extensions = self._prompt_extension_cleaning(
+                    app_details, merge_result
+                )
+
+                self._apply_configurations(
+                    app_details, merge_result, prune_extensions, clean_extensions, tasks
+                )
                 self._show_success_message(app_details, merge_result)
 
         except Exception as e:
@@ -122,17 +128,21 @@ class ApplyCommand:
         )
         console.print(f"[green]Backup created:[/green] {backup_path}")
         return backup_path
-    
+
     def _clean_user_directory(self, app_details: AppDetails) -> None:
         """Remove only the configuration files we manage, preserving app data."""
         if not app_details.config_path.exists():
             # Create the directory if it doesn't exist
             app_details.config_path.mkdir(parents=True, exist_ok=True)
-            console.print(f"[green]✓[/green] Created user directory: {app_details.config_path}")
+            console.print(
+                f"[green]✓[/green] Created user directory: {app_details.config_path}"
+            )
             return
-        
-        console.print(f"[yellow]Cleaning managed config files in:[/yellow] {app_details.config_path}")
-        
+
+        console.print(
+            f"[yellow]Cleaning managed config files in:[/yellow] {app_details.config_path}"
+        )
+
         # Files we manage - remove these for a clean slate
         managed_files = [
             "settings.json",
@@ -140,7 +150,7 @@ class ApplyCommand:
             "tasks.json",
             "snippets",  # Directory
         ]
-        
+
         cleaned_count = 0
         for item_name in managed_files:
             item_path = app_details.config_path / item_name
@@ -152,7 +162,7 @@ class ApplyCommand:
                     shutil.rmtree(item_path)
                     console.print(f"[dim]  Removed directory: {item_name}[/dim]")
                 cleaned_count += 1
-        
+
         # Preserve everything else:
         # - globalStorage/ (auth, licenses, app data)
         # - workspaceStorage/ (workspace-specific data)
@@ -160,9 +170,11 @@ class ApplyCommand:
         # - logs/ (application logs)
         # - extensions/ (extension metadata)
         # - Any other app-specific directories
-        
+
         if cleaned_count > 0:
-            console.print(f"[green]✓[/green] Cleaned {cleaned_count} managed config items")
+            console.print(
+                f"[green]✓[/green] Cleaned {cleaned_count} managed config items"
+            )
         else:
             console.print(f"[green]✓[/green] No managed config files to clean")
 
@@ -307,7 +319,9 @@ class ApplyCommand:
             else:
                 console.print("[dim]No keybindings.json to apply[/dim]")
 
-    def _show_tasks_diff(self, app_details: AppDetails, tasks_source: Optional[Path]) -> None:
+    def _show_tasks_diff(
+        self, app_details: AppDetails, tasks_source: Optional[Path]
+    ) -> None:
         """Show tasks.json changes during dry run."""
         console.print("\n[bold]Tasks.json changes:[/bold]")
 
@@ -321,9 +335,7 @@ class ApplyCommand:
                 if current_content == new_content:
                     console.print("[green]No changes needed[/green]")
                 else:
-                    console.print(
-                        f"[yellow]Will replace with:[/yellow] {tasks_source}"
-                    )
+                    console.print(f"[yellow]Will replace with:[/yellow] {tasks_source}")
             else:
                 console.print(f"[green]Will create from:[/green] {tasks_source}")
         else:
@@ -431,21 +443,29 @@ class ApplyCommand:
             console.print(f"Will modify: {', '.join(changes_summary)}")
 
         return Confirm.ask("Proceed with applying configuration?", default=True)
-    
-    def _prompt_extension_cleaning(self, app_details: AppDetails, merge_result: MergeResult) -> bool:
+
+    def _prompt_extension_cleaning(
+        self, app_details: AppDetails, merge_result: MergeResult
+    ) -> bool:
         """Ask user if they want to clean extensions for a fresh start."""
         if not merge_result.extensions:
             return False  # No extensions to manage, skip cleaning
-        
+
         extension_dir = AppManager.get_extension_directory(app_details.alias)
-        
+
         if not extension_dir.exists():
             return False  # No existing extensions to clean
-        
-        console.print(f"\n[bold yellow]Extension Directory Found:[/bold yellow] {extension_dir}")
-        console.print("Do you want to clean all existing extensions and install only the ones from your config?")
-        console.print("[dim]This will remove all currently installed extensions and do a fresh install.[/dim]")
-        
+
+        console.print(
+            f"\n[bold yellow]Extension Directory Found:[/bold yellow] {extension_dir}"
+        )
+        console.print(
+            "Do you want to clean all existing extensions and install only the ones from your config?"
+        )
+        console.print(
+            "[dim]This will remove all currently installed extensions and do a fresh install.[/dim]"
+        )
+
         return Confirm.ask("Clean extensions directory?", default=False)
 
     def _apply_configurations(
@@ -478,7 +498,7 @@ class ApplyCommand:
         # Clean extensions directory if requested
         if clean_extensions:
             self._clean_extensions_directory(app_details)
-        
+
         # Apply extensions
         if merge_result.extensions:
             self._apply_extensions(
@@ -530,17 +550,21 @@ class ApplyCommand:
                 snippets_applied += len(snippet_files)
 
         console.print(f"[green]✓[/green] {snippets_applied} snippet files applied")
-    
+
     def _clean_extensions_directory(self, app_details: AppDetails) -> None:
         """Clean the extensions directory for a fresh start."""
         extension_dir = AppManager.get_extension_directory(app_details.alias)
-        
+
         if not extension_dir.exists():
-            console.print(f"[dim]Extensions directory doesn't exist, skipping clean[/dim]")
+            console.print(
+                f"[dim]Extensions directory doesn't exist, skipping clean[/dim]"
+            )
             return
-        
-        console.print(f"[yellow]Cleaning extensions directory:[/yellow] {extension_dir}")
-        
+
+        console.print(
+            f"[yellow]Cleaning extensions directory:[/yellow] {extension_dir}"
+        )
+
         try:
             shutil.rmtree(extension_dir)
             console.print(f"[green]✓[/green] Extensions directory cleaned")
@@ -571,7 +595,9 @@ class ApplyCommand:
                 to_uninstall = set()
             else:
                 # Normal case: check what's currently installed
-                current_extensions = set(AppManager.get_installed_extensions(app_details))
+                current_extensions = set(
+                    AppManager.get_installed_extensions(app_details)
+                )
                 target_extensions_set = set(target_extensions)
 
                 to_install = target_extensions_set - current_extensions

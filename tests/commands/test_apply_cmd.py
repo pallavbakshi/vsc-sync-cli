@@ -190,7 +190,11 @@ class TestApplyCommand:
 
         # Apply with tasks disabled
         cmd._apply_configurations(
-            app_details, merge_result, prune_extensions=False, clean_extensions=False, tasks_enabled=False
+            app_details,
+            merge_result,
+            prune_extensions=False,
+            clean_extensions=False,
+            tasks_enabled=False,
         )
 
         # tasks.json should not be copied

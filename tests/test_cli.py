@@ -31,13 +31,13 @@ def test_discover_command():
     assert "Discovering VSCode-like applications" in result.stdout
 
 
-@patch('vsc_sync.cli.ConfigManager')
+@patch("vsc_sync.cli.ConfigManager")
 def test_list_apps_not_initialized(mock_config_manager_class):
     """Test list-apps command when not initialized."""
     # Mock the config manager to return uninitialized state
     mock_manager = mock_config_manager_class.return_value
     mock_manager.is_initialized.return_value = False
-    
+
     result = runner.invoke(app, ["list-apps"])
     assert result.exit_code == 1
     assert "not initialized" in result.stdout
@@ -60,24 +60,24 @@ class TestCLICommands:
         assert result.exit_code == 0
         assert "coming soon" in result.stdout.lower()
 
-    @patch('vsc_sync.cli.ConfigManager')
+    @patch("vsc_sync.cli.ConfigManager")
     def test_apply_command(self, mock_config_manager_class):
         """Test apply command structure."""
         # Mock the config manager to return uninitialized state
         mock_manager = mock_config_manager_class.return_value
         mock_manager.is_initialized.return_value = False
-        
+
         result = runner.invoke(app, ["apply", "test-app"])
         assert result.exit_code == 1
         assert "not initialized" in result.stdout
 
-    @patch('vsc_sync.cli.ConfigManager')
+    @patch("vsc_sync.cli.ConfigManager")
     def test_status_command_basic(self, mock_config_manager_class):
         """Test status command basic functionality."""
         # Mock the config manager to return uninitialized state
         mock_manager = mock_config_manager_class.return_value
         mock_manager.is_initialized.return_value = False
-        
+
         result = runner.invoke(app, ["status"])
         assert result.exit_code == 1
         assert "not initialized" in result.stdout

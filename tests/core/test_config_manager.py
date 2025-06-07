@@ -176,7 +176,8 @@ class TestLayerConfigManager:
         """tasks_source should be populated in MergeResult."""
         repo = temp_dir / "repo"
         (repo / "base").mkdir(parents=True)
-        (repo / "base" / "settings.json").write_text("{}"); (repo / "base" / "tasks.json").write_text("{}")
+        (repo / "base" / "settings.json").write_text("{}")
+        (repo / "base" / "tasks.json").write_text("{}")
 
         manager = LayerConfigManager(repo)
         result = manager.merge_layers(app_alias=None, stacks=None)

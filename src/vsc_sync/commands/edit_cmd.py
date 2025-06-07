@@ -26,9 +26,9 @@ FILE_TYPE_MAPPING = {
 LAYER_TYPE_PATHS = {
     "base": "base",
     "app": "apps",
-    "stack": "stacks", 
+    "stack": "stacks",
     "project": "projects",
-    "live": None  # Special case for actual app configs
+    "live": None,  # Special case for actual app configs
 }
 
 
@@ -47,7 +47,9 @@ class EditCommand:
     ) -> None:
         """Execute the edit command."""
         try:
-            console.print(f"[bold blue]Opening {layer_type} {file_type} for editing...[/bold blue]")
+            console.print(
+                f"[bold blue]Opening {layer_type} {file_type} for editing...[/bold blue]"
+            )
 
             # Step 1: Validate inputs
             self._validate_inputs(layer_type, layer_name, file_type)
@@ -60,7 +62,7 @@ class EditCommand:
                 if not self._prompt_create_file(file_path):
                     console.print("[yellow]Edit cancelled.[/yellow]")
                     return
-                
+
                 self._create_file_if_needed(file_path, file_type)
 
             # Step 4: Open file in editor
@@ -89,9 +91,7 @@ class EditCommand:
 
         # layer_name is required for non-base layers
         if layer_type not in ["base"] and not layer_name:
-            raise VscSyncError(
-                f"Layer name is required for layer type '{layer_type}'"
-            )
+            raise VscSyncError(f"Layer name is required for layer type '{layer_type}'")
 
         # Validate app layer names against registered apps (for both 'app' and 'live')
         if layer_type in ["app", "live"] and layer_name not in self.config.managed_apps:
@@ -105,7 +105,7 @@ class EditCommand:
         self, layer_type: str, layer_name: Optional[str], file_type: str
     ) -> Path:
         """Construct the full path to the configuration file."""
-        
+
         # Special handling for live app configs
         if layer_type == "live":
             app_details = self.config.managed_apps[layer_name]
@@ -113,10 +113,10 @@ class EditCommand:
                 return app_details.config_path / FILE_TYPE_MAPPING[file_type]
             else:
                 return app_details.config_path / FILE_TYPE_MAPPING[file_type]
-        
+
         # Normal handling for vscode-configs repository files
         configs_path = self.config.vscode_configs_path
-        
+
         if layer_type == "base":
             layer_path = configs_path / LAYER_TYPE_PATHS[layer_type]
         else:
@@ -131,7 +131,9 @@ class EditCommand:
     def _prompt_create_file(self, file_path: Path) -> bool:
         """Ask user if they want to create the file if it doesn't exist."""
         if file_path.name == "snippets":
-            console.print(f"[yellow]Snippets directory doesn't exist:[/yellow] {file_path}")
+            console.print(
+                f"[yellow]Snippets directory doesn't exist:[/yellow] {file_path}"
+            )
             return Confirm.ask("Create snippets directory?", default=True)
         else:
             console.print(f"[yellow]File doesn't exist:[/yellow] {file_path}")
@@ -168,22 +170,21 @@ class EditCommand:
     def _open_file_in_editor(self, file_path: Path) -> None:
         """Open the file in the configured or system default editor."""
         editor = self._get_editor()
-        
+
         try:
             if file_path.is_dir():
                 # For snippets directory, open the directory
-                console.print(f"[cyan]Opening directory in {editor}:[/cyan] {file_path}")
+                console.print(
+                    f"[cyan]Opening directory in {editor}:[/cyan] {file_path}"
+                )
             else:
                 console.print(f"[cyan]Opening file in {editor}:[/cyan] {file_path}")
 
             # Try to open with the editor
             result = subprocess.run(
-                [editor, str(file_path)],
-                check=True,
-                capture_output=True,
-                text=True
+                [editor, str(file_path)], check=True, capture_output=True, text=True
             )
-            
+
             console.print(f"[green]✓[/green] Opened successfully")
 
         except subprocess.CalledProcessError as e:
@@ -197,22 +198,19 @@ class EditCommand:
         """Get the editor to use for opening files."""
         # Check if user has configured a preferred editor
         # For now, we'll use a simple priority order
-        
+
         # 1. Check for VSCode (most likely to be available)
         editors_to_try = ["code", "codium", "cursor"]
-        
+
         for editor in editors_to_try:
             try:
                 result = subprocess.run(
-                    [editor, "--version"],
-                    check=True,
-                    capture_output=True,
-                    text=True
+                    [editor, "--version"], check=True, capture_output=True, text=True
                 )
                 return editor
             except (subprocess.CalledProcessError, FileNotFoundError):
                 continue
-        
+
         # 2. Fall back to system defaults based on platform
         if sys.platform == "darwin":  # macOS
             return "open"

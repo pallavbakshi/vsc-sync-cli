@@ -22,7 +22,9 @@ def iter_modules(package_name: str):
 
     # Packages (i.e. modules with a __path__) may contain sub-modules.
     if hasattr(module, "__path__"):
-        for submodule in pkgutil.walk_packages(module.__path__, prefix=f"{package_name}."):
+        for submodule in pkgutil.walk_packages(
+            module.__path__, prefix=f"{package_name}."
+        ):
             yield from iter_modules(submodule.name)
 
 

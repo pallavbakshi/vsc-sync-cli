@@ -17,7 +17,7 @@ class TestEditCommand:
     def mock_config_manager(self, tmp_path):
         """Create a mock config manager."""
         config_manager = Mock(spec=ConfigManager)
-        
+
         # Mock config with apps
         mock_config = VscSyncConfig(
             vscode_configs_path=tmp_path / "vscode-configs",
@@ -25,16 +25,16 @@ class TestEditCommand:
                 "vscode": AppDetails(
                     alias="vscode",
                     config_path=tmp_path / "vscode",
-                    executable_path=Path("code")
+                    executable_path=Path("code"),
                 ),
                 "cursor": AppDetails(
-                    alias="cursor", 
+                    alias="cursor",
                     config_path=tmp_path / "cursor",
-                    executable_path=Path("cursor")
-                )
-            }
+                    executable_path=Path("cursor"),
+                ),
+            },
         )
-        
+
         config_manager.load_config.return_value = mock_config
         return config_manager
 
@@ -148,87 +148,88 @@ class TestEditCommand:
         """Test get initial content for tasks file."""
         command = EditCommand(mock_config_manager)
         content = command._get_initial_content("tasks")
-        assert "\"version\"" in content and "\"tasks\"" in content
+        assert '"version"' in content and '"tasks"' in content
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
     def test_get_editor_finds_code(self, mock_run, mock_config_manager):
         """Test get editor finds code executable."""
         # Mock successful code --version call
         mock_run.return_value = Mock()
-        
+
         command = EditCommand(mock_config_manager)
         editor = command._get_editor()
-        
+
         assert editor == "code"
         mock_run.assert_called_once_with(
-            ["code", "--version"],
-            check=True,
-            capture_output=True,
-            text=True
+            ["code", "--version"], check=True, capture_output=True, text=True
         )
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
-    @patch('src.vsc_sync.commands.edit_cmd.sys.platform', 'darwin')
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
+    @patch("src.vsc_sync.commands.edit_cmd.sys.platform", "darwin")
     def test_get_editor_falls_back_to_open(self, mock_run, mock_config_manager):
         """Test get editor falls back to system default on macOS."""
         # Mock all editor checks failing
         mock_run.side_effect = FileNotFoundError()
-        
+
         command = EditCommand(mock_config_manager)
         editor = command._get_editor()
-        
+
         assert editor == "open"
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
-    @patch('src.vsc_sync.commands.edit_cmd.Confirm.ask')
-    def test_run_success_existing_file(self, mock_confirm, mock_run, mock_config_manager, tmp_path):
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
+    @patch("src.vsc_sync.commands.edit_cmd.Confirm.ask")
+    def test_run_success_existing_file(
+        self, mock_confirm, mock_run, mock_config_manager, tmp_path
+    ):
         """Test successful run with existing file."""
         # Setup
         config_path = tmp_path / "vscode-configs" / "base"
         config_path.mkdir(parents=True)
         settings_file = config_path / "settings.json"
-        settings_file.write_text('{}')
-        
+        settings_file.write_text("{}")
+
         mock_run.return_value = Mock()  # Mock successful editor execution
-        
+
         command = EditCommand(mock_config_manager)
-        
+
         # Should not raise
         command.run("base", None, "settings")
-        
+
         # Verify editor was called (once for --version check, once for opening file)
         assert mock_run.call_count == 2
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
-    @patch('src.vsc_sync.commands.edit_cmd.Confirm.ask', return_value=True)
-    def test_run_creates_new_file(self, mock_confirm, mock_run, mock_config_manager, tmp_path):
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
+    @patch("src.vsc_sync.commands.edit_cmd.Confirm.ask", return_value=True)
+    def test_run_creates_new_file(
+        self, mock_confirm, mock_run, mock_config_manager, tmp_path
+    ):
         """Test run creates new file when it doesn't exist."""
         mock_run.return_value = Mock()  # Mock successful editor execution
-        
+
         command = EditCommand(mock_config_manager)
         command.run("base", None, "settings")
-        
+
         # Verify file was created
         expected_file = tmp_path / "vscode-configs" / "base" / "settings.json"
         assert expected_file.exists()
         assert expected_file.read_text() == "{\n}\n"
-        
+
         # Verify editor was called (once for --version check, once for opening file)
         assert mock_run.call_count == 2
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
-    @patch('src.vsc_sync.commands.edit_cmd.Confirm.ask', return_value=False)
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
+    @patch("src.vsc_sync.commands.edit_cmd.Confirm.ask", return_value=False)
     def test_run_cancelled_by_user(self, mock_confirm, mock_run, mock_config_manager):
         """Test run cancelled when user declines file creation."""
         command = EditCommand(mock_config_manager)
-        
+
         # Should not raise but should exit early
         command.run("base", None, "settings")
-        
+
         # Editor should not be called
         mock_run.assert_not_called()
 
-    @patch('src.vsc_sync.commands.edit_cmd.subprocess.run')
+    @patch("src.vsc_sync.commands.edit_cmd.subprocess.run")
     def test_run_live_app_existing_file(self, mock_run, mock_config_manager, tmp_path):
         """Test successful run with existing live app file."""
         # Setup live app config file
@@ -236,13 +237,13 @@ class TestEditCommand:
         app_config_path.mkdir()
         settings_file = app_config_path / "settings.json"
         settings_file.write_text('{"editor.fontSize": 14}')
-        
+
         mock_run.return_value = Mock()  # Mock successful editor execution
-        
+
         command = EditCommand(mock_config_manager)
-        
+
         # Should not raise
         command.run("live", "vscode", "settings")
-        
+
         # Verify editor was called (once for --version check, once for opening file)
         assert mock_run.call_count == 2

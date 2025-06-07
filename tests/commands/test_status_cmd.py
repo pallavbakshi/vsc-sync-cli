@@ -754,11 +754,13 @@ class TestStatusCommand:
         with pytest.raises(VscSyncError, match="Status check failed"):
             status_cmd.run(app_alias="nonexistent")
 
-    def test_get_app_status_summary_error_handling(self, temp_dir, mock_vscode_configs_repo):
+    def test_get_app_status_summary_error_handling(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test that _get_app_status_summary handles errors gracefully."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
-        # Create app with non-existent config path  
+        # Create app with non-existent config path
         app_details = AppDetails(
             alias="test-vscode",
             config_path=temp_dir / "nonexistent",
@@ -773,13 +775,13 @@ class TestStatusCommand:
 
         status_cmd = StatusCommand(config_manager)
 
-        # The current implementation will show OUT OF SYNC rather than ERROR 
+        # The current implementation will show OUT OF SYNC rather than ERROR
         # because the layer merging succeeds, but file operations will fail
         result = status_cmd._get_app_status_summary(app_details, [])
 
         # Since the config directory doesn't exist, it will be OUT OF SYNC
-        assert ("OUT OF SYNC" in result["settings"] or "ERROR" in result["settings"])
-        assert ("OUT OF SYNC" in result["overall"] or "ERROR" in result["overall"])
+        assert "OUT OF SYNC" in result["settings"] or "ERROR" in result["settings"]
+        assert "OUT OF SYNC" in result["overall"] or "ERROR" in result["overall"]
 
     def test_show_active_layers(self, temp_dir, mock_vscode_configs_repo):
         """Test showing active layers."""
@@ -840,7 +842,9 @@ class TestStatusCommand:
         # Should not raise exception
         status_cmd._compare_configurations(app_details, merge_result, [])
 
-    def test_get_app_status_summary_with_unknown_status(self, temp_dir, mock_vscode_configs_repo):
+    def test_get_app_status_summary_with_unknown_status(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test app status summary when some components have unknown status."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
@@ -862,14 +866,23 @@ class TestStatusCommand:
         status_cmd = StatusCommand(config_manager)
 
         # Mock to return UNKNOWN status for extensions and IN SYNC for others
-        with patch.object(status_cmd, '_get_extensions_status', return_value="[yellow]UNKNOWN[/yellow]"), \
-             patch.object(status_cmd, '_get_settings_status', return_value="[green]IN SYNC[/green]"), \
-             patch.object(status_cmd, '_get_keybindings_status', return_value="[green]IN SYNC[/green]"), \
-             patch.object(status_cmd, '_get_snippets_status', return_value="[green]IN SYNC[/green]"):
+        with patch.object(
+            status_cmd,
+            "_get_extensions_status",
+            return_value="[yellow]UNKNOWN[/yellow]",
+        ), patch.object(
+            status_cmd, "_get_settings_status", return_value="[green]IN SYNC[/green]"
+        ), patch.object(
+            status_cmd, "_get_keybindings_status", return_value="[green]IN SYNC[/green]"
+        ), patch.object(
+            status_cmd, "_get_snippets_status", return_value="[green]IN SYNC[/green]"
+        ):
             result = status_cmd._get_app_status_summary(app_details, [])
             assert "UNKNOWN" in result["overall"]
 
-    def test_get_app_status_summary_with_partial_status(self, temp_dir, mock_vscode_configs_repo):
+    def test_get_app_status_summary_with_partial_status(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test app status summary with mixed status (partial)."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
@@ -891,10 +904,15 @@ class TestStatusCommand:
         status_cmd = StatusCommand(config_manager)
 
         # Mock mixed statuses
-        with patch.object(status_cmd, '_get_settings_status', return_value="[green]IN SYNC[/green]"), \
-             patch.object(status_cmd, '_get_keybindings_status', return_value="[yellow]EXTRA[/yellow]"), \
-             patch.object(status_cmd, '_get_snippets_status', return_value="[green]IN SYNC[/green]"), \
-             patch.object(status_cmd, '_get_extensions_status', return_value="[green]IN SYNC[/green]"):
+        with patch.object(
+            status_cmd, "_get_settings_status", return_value="[green]IN SYNC[/green]"
+        ), patch.object(
+            status_cmd, "_get_keybindings_status", return_value="[yellow]EXTRA[/yellow]"
+        ), patch.object(
+            status_cmd, "_get_snippets_status", return_value="[green]IN SYNC[/green]"
+        ), patch.object(
+            status_cmd, "_get_extensions_status", return_value="[green]IN SYNC[/green]"
+        ):
             result = status_cmd._get_app_status_summary(app_details, [])
             assert "PARTIAL" in result["overall"]
 
@@ -928,16 +946,21 @@ class TestStatusCommand:
 
         # Force an exception for the broken app by mocking _get_app_status_summary to raise
         original_method = status_cmd._get_app_status_summary
+
         def mock_summary(app_details, stacks):
             if app_details.alias == "broken-app":
                 raise Exception("Test exception")
             return original_method(app_details, stacks)
-        
-        with patch.object(status_cmd, '_get_app_status_summary', side_effect=mock_summary):
+
+        with patch.object(
+            status_cmd, "_get_app_status_summary", side_effect=mock_summary
+        ):
             # Should not raise exception, should handle error gracefully
             status_cmd._check_all_apps_status()
 
-    def test_show_setting_differences_with_large_changes(self, temp_dir, mock_vscode_configs_repo):
+    def test_show_setting_differences_with_large_changes(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test showing setting differences when there are many changes."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
@@ -949,7 +972,9 @@ class TestStatusCommand:
         status_cmd = StatusCommand(config_manager)
 
         current = {"old_setting": "value"}
-        target = {f"new_setting_{i}": f"value_{i}" for i in range(10)}  # 10 new settings
+        target = {
+            f"new_setting_{i}": f"value_{i}" for i in range(10)
+        }  # 10 new settings
 
         # This should trigger the "... and X more" logic
         status_cmd._show_setting_differences(current, target)
@@ -962,7 +987,9 @@ class TestStatusCommand:
         app_config_dir.mkdir()
 
         # Create keybindings that don't match target
-        (app_config_dir / "keybindings.json").write_text('[{"key": "ctrl+k", "command": "test"}]')
+        (app_config_dir / "keybindings.json").write_text(
+            '[{"key": "ctrl+k", "command": "test"}]'
+        )
 
         app_details = AppDetails(
             alias="test-vscode",
@@ -1009,7 +1036,9 @@ class TestStatusCommand:
         # Should not raise exception and should show extra
         status_cmd._compare_keybindings(app_details, None)
 
-    def test_compare_snippets_no_target_with_current(self, temp_dir, mock_vscode_configs_repo):
+    def test_compare_snippets_no_target_with_current(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test comparing snippets when no target exists but current snippets exist."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
@@ -1038,7 +1067,9 @@ class TestStatusCommand:
         # Should not raise exception and should show extra
         status_cmd._compare_snippets(app_details, [])
 
-    def test_compare_snippets_no_target_no_current(self, temp_dir, mock_vscode_configs_repo):
+    def test_compare_snippets_no_target_no_current(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test comparing snippets when no target and no current snippets exist."""
         config_manager = ConfigManager(temp_dir / "config.json")
 
@@ -1066,98 +1097,125 @@ class TestStatusCommand:
     def test_generate_edit_suggestions_basic(self, temp_dir, mock_vscode_configs_repo):
         """Test generating basic edit suggestions."""
         config_manager = ConfigManager(temp_dir / "config.json")
-        
+
         app_details = AppDetails(
             alias="test-vscode",
             config_path=temp_dir / "vscode_config",
             executable_path=Path("/usr/bin/code"),
         )
-        
+
         config = VscSyncConfig(
             vscode_configs_path=mock_vscode_configs_repo,
             managed_apps={"test-vscode": app_details},
         )
         config_manager.save_config(config)
-        
+
         command = StatusCommand(config_manager)
         suggestions = command._generate_edit_suggestions("cursor")
-        
+
         assert suggestions["live_settings"] == "vsc-sync edit live cursor"
-        assert suggestions["live_keybindings"] == "vsc-sync edit live cursor --file-type keybindings"
+        assert (
+            suggestions["live_keybindings"]
+            == "vsc-sync edit live cursor --file-type keybindings"
+        )
         assert suggestions["app_settings"] == "vsc-sync edit app cursor"
         assert suggestions["base_settings"] == "vsc-sync edit base"
 
-    def test_generate_edit_suggestions_with_stacks(self, temp_dir, mock_vscode_configs_repo):
+    def test_generate_edit_suggestions_with_stacks(
+        self, temp_dir, mock_vscode_configs_repo
+    ):
         """Test generating edit suggestions with stacks."""
         config_manager = ConfigManager(temp_dir / "config.json")
-        
+
         app_details = AppDetails(
             alias="test-vscode",
             config_path=temp_dir / "vscode_config",
             executable_path=Path("/usr/bin/code"),
         )
-        
+
         config = VscSyncConfig(
             vscode_configs_path=mock_vscode_configs_repo,
             managed_apps={"test-vscode": app_details},
         )
         config_manager.save_config(config)
-        
-        command = StatusCommand(config_manager)
-        suggestions = command._generate_edit_suggestions("vscode", ["python", "web-dev"])
-        
-        assert suggestions["stack_python_settings"] == "vsc-sync edit stack python"
-        assert suggestions["stack_python_keybindings"] == "vsc-sync edit stack python --file-type keybindings"
-        assert suggestions["stack_web-dev_settings"] == "vsc-sync edit stack web-dev"
-        assert suggestions["stack_web-dev_keybindings"] == "vsc-sync edit stack web-dev --file-type keybindings"
 
-    @patch('rich.console.Console.print')
-    def test_show_edit_suggestions_for_settings(self, mock_print, temp_dir, mock_vscode_configs_repo):
+        command = StatusCommand(config_manager)
+        suggestions = command._generate_edit_suggestions(
+            "vscode", ["python", "web-dev"]
+        )
+
+        assert suggestions["stack_python_settings"] == "vsc-sync edit stack python"
+        assert (
+            suggestions["stack_python_keybindings"]
+            == "vsc-sync edit stack python --file-type keybindings"
+        )
+        assert suggestions["stack_web-dev_settings"] == "vsc-sync edit stack web-dev"
+        assert (
+            suggestions["stack_web-dev_keybindings"]
+            == "vsc-sync edit stack web-dev --file-type keybindings"
+        )
+
+    @patch("rich.console.Console.print")
+    def test_show_edit_suggestions_for_settings(
+        self, mock_print, temp_dir, mock_vscode_configs_repo
+    ):
         """Test showing edit suggestions for settings."""
         config_manager = ConfigManager(temp_dir / "config.json")
-        
+
         app_details = AppDetails(
             alias="test-vscode",
             config_path=temp_dir / "vscode_config",
             executable_path=Path("/usr/bin/code"),
         )
-        
+
         config = VscSyncConfig(
             vscode_configs_path=mock_vscode_configs_repo,
             managed_apps={"test-vscode": app_details},
         )
         config_manager.save_config(config)
-        
+
         command = StatusCommand(config_manager)
         command._show_edit_suggestions_for_settings("cursor", ["python"])
-        
+
         # Check that appropriate suggestions were printed
         mock_print.assert_any_call(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
-        mock_print.assert_any_call(f"    Edit live app config:  [cyan]vsc-sync edit live cursor[/cyan]")
-        mock_print.assert_any_call(f"    Edit app layer:        [cyan]vsc-sync edit app cursor[/cyan]")
-        mock_print.assert_any_call(f"    Edit python stack:       [cyan]vsc-sync edit stack python[/cyan]")
+        mock_print.assert_any_call(
+            f"    Edit live app config:  [cyan]vsc-sync edit live cursor[/cyan]"
+        )
+        mock_print.assert_any_call(
+            f"    Edit app layer:        [cyan]vsc-sync edit app cursor[/cyan]"
+        )
+        mock_print.assert_any_call(
+            f"    Edit python stack:       [cyan]vsc-sync edit stack python[/cyan]"
+        )
 
-    @patch('rich.console.Console.print')
-    def test_show_edit_suggestions_for_keybindings(self, mock_print, temp_dir, mock_vscode_configs_repo):
+    @patch("rich.console.Console.print")
+    def test_show_edit_suggestions_for_keybindings(
+        self, mock_print, temp_dir, mock_vscode_configs_repo
+    ):
         """Test showing edit suggestions for keybindings."""
         config_manager = ConfigManager(temp_dir / "config.json")
-        
+
         app_details = AppDetails(
             alias="test-vscode",
             config_path=temp_dir / "vscode_config",
             executable_path=Path("/usr/bin/code"),
         )
-        
+
         config = VscSyncConfig(
             vscode_configs_path=mock_vscode_configs_repo,
             managed_apps={"test-vscode": app_details},
         )
         config_manager.save_config(config)
-        
+
         command = StatusCommand(config_manager)
         command._show_edit_suggestions_for_keybindings("vscode", [])
-        
+
         # Check that appropriate suggestions were printed
         mock_print.assert_any_call(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
-        mock_print.assert_any_call(f"    Edit live app config:  [cyan]vsc-sync edit live vscode --file-type keybindings[/cyan]")
-        mock_print.assert_any_call(f"    Edit app layer:        [cyan]vsc-sync edit app vscode --file-type keybindings[/cyan]")
+        mock_print.assert_any_call(
+            f"    Edit live app config:  [cyan]vsc-sync edit live vscode --file-type keybindings[/cyan]"
+        )
+        mock_print.assert_any_call(
+            f"    Edit app layer:        [cyan]vsc-sync edit app vscode --file-type keybindings[/cyan]"
+        )

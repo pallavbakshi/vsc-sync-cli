@@ -28,9 +28,7 @@ def test_apply_tasks_file(temp_dir):
         keybindings_source=None,
         extensions=[],
         snippets_paths=[],
-        layers_applied=[
-            LayerInfo(layer_type="base", path=temp_dir)
-        ],
+        layers_applied=[LayerInfo(layer_type="base", path=temp_dir)],
         tasks_source=tasks_source,
     )
 

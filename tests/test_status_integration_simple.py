@@ -31,10 +31,10 @@ class TestStatusIntegrationSimple:
         """Test status command with an isolated configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             temp_path = Path(tmpdir)
-            
+
             # Create mock vscode-configs repo
             vscode_configs_path = temp_path / "vscode-configs"
-            
+
             # Create base layer
             base_dir = vscode_configs_path / "base"
             base_dir.mkdir(parents=True)
@@ -53,12 +53,14 @@ class TestStatusIntegrationSimple:
             # Create app config directory
             app_config_dir = temp_path / "vscode_config"
             app_config_dir.mkdir()
-            (app_config_dir / "settings.json").write_text('{"editor.fontSize": 12}')  # Out of sync
-            
+            (app_config_dir / "settings.json").write_text(
+                '{"editor.fontSize": 12}'
+            )  # Out of sync
+
             # Create config file
             config_file = temp_path / "vsc-sync-config.json"
             config_manager = ConfigManager(config_file)
-            
+
             app_details = AppDetails(
                 alias="test-vscode",
                 config_path=app_config_dir,
@@ -75,26 +77,30 @@ class TestStatusIntegrationSimple:
             old_env = os.environ.get("VSC_SYNC_CONFIG")
             try:
                 os.environ["VSC_SYNC_CONFIG"] = str(config_file)
-                
+
                 # Test status for all apps
                 result = runner.invoke(app, ["status"])
                 assert result.exit_code == 0
                 # The test config might not be picked up due to CLI implementation
                 # Just verify it runs without error and shows some apps
-                assert ("test-vscode" in result.stdout or 
-                       "vscode" in result.stdout or 
-                       "Configuration Status Summary" in result.stdout)
-                
+                assert (
+                    "test-vscode" in result.stdout
+                    or "vscode" in result.stdout
+                    or "Configuration Status Summary" in result.stdout
+                )
+
                 # Test status for specific app
                 result = runner.invoke(app, ["status", "vscode"])  # Use system app
                 assert result.exit_code == 0
-                assert ("Checking status for vscode" in result.stdout or 
-                       "vscode" in result.stdout.lower())
-                
+                assert (
+                    "Checking status for vscode" in result.stdout
+                    or "vscode" in result.stdout.lower()
+                )
+
                 # Test status for nonexistent app
                 result = runner.invoke(app, ["status", "nonexistent"])
                 assert result.exit_code == 1
-                
+
             finally:
                 # Restore environment
                 if old_env is not None:
@@ -108,7 +114,7 @@ class TestStatusIntegrationSimple:
         result = runner.invoke(app, ["status"])
         # Should either show status or show not initialized message
         assert result.exit_code in (0, 1)  # Both are valid depending on system state
-        
+
         # Should have some meaningful output
         assert len(result.stdout.strip()) > 0
 
@@ -124,7 +130,9 @@ class TestStatusIntegrationSimple:
 
     def test_status_multiple_stacks(self):
         """Test status command with multiple stacks."""
-        result = runner.invoke(app, ["status", "--stack", "python", "--stack", "web-dev"])
+        result = runner.invoke(
+            app, ["status", "--stack", "python", "--stack", "web-dev"]
+        )
         # Should either work or fail gracefully
         assert result.exit_code in (0, 1)
         assert len(result.stdout.strip()) > 0

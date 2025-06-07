@@ -59,7 +59,7 @@ class TestInitCommand:
             str(temp_dir / "new-vscode-configs"),  # Repository path
         ]
         mock_confirm.side_effect = [
-            False,  # Don't review apps individually  
+            False,  # Don't review apps individually
             False,  # Don't add more apps manually
             False,  # Additional confirm for any other prompts
         ]
@@ -79,7 +79,10 @@ class TestInitCommand:
         assert config_manager.config_path.exists()
         config = config_manager.load_config()
         # Use resolve() to handle /private/var vs /var differences on macOS
-        assert config.vscode_configs_path.resolve() == (temp_dir / "new-vscode-configs").resolve()
+        assert (
+            config.vscode_configs_path.resolve()
+            == (temp_dir / "new-vscode-configs").resolve()
+        )
 
         # Check that repository structure was created
         repo_path = temp_dir / "new-vscode-configs"
@@ -116,11 +119,11 @@ class TestInitCommand:
             False,  # Don't add more apps manually
             False,  # Additional confirm for any other prompts
         ]
-        # Mock discovered apps to avoid forced manual addition  
+        # Mock discovered apps to avoid forced manual addition
         mock_discover.return_value = {
             "cursor": AppDetails(
                 alias="cursor",
-                config_path=temp_dir / "cursor_config", 
+                config_path=temp_dir / "cursor_config",
                 executable_path=Path("/usr/bin/cursor"),
             )
         }
@@ -131,7 +134,9 @@ class TestInitCommand:
         # Check that config was created with correct repo path
         config = config_manager.load_config()
         # Use resolve() to handle /private/var vs /var differences on macOS
-        assert config.vscode_configs_path.resolve() == mock_vscode_configs_repo.resolve()
+        assert (
+            config.vscode_configs_path.resolve() == mock_vscode_configs_repo.resolve()
+        )
 
     @patch("vsc_sync.commands.init_cmd.Confirm.ask")
     @patch("vsc_sync.commands.init_cmd.Prompt.ask")
@@ -173,7 +178,10 @@ class TestInitCommand:
         config = config_manager.load_config()
         assert "vscode" in config.managed_apps
         # Use resolve() to handle /private/var vs /var differences on macOS
-        assert config.managed_apps["vscode"].config_path.resolve() == app_config_dir.resolve()
+        assert (
+            config.managed_apps["vscode"].config_path.resolve()
+            == app_config_dir.resolve()
+        )
 
     def test_setup_config_path_default(self, temp_dir):
         """Test setting up config path with default."""

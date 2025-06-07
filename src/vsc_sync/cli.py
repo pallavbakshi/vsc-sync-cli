@@ -155,7 +155,9 @@ def apply(
         None, "--stack", help="Tech stack to apply (can be used multiple times)"
     ),
     backup: bool = typer.Option(
-        True, "--backup/--no-backup", help="Create backup before applying (default: enabled)"
+        True,
+        "--backup/--no-backup",
+        help="Create backup before applying (default: enabled)",
     ),
     backup_suffix: Optional[str] = typer.Option(
         None, "--backup-suffix", help="Custom backup suffix"
@@ -243,13 +245,20 @@ def setup_project(
         ".", help="Path to the project directory (defaults to current directory)"
     ),
     stack: Optional[list[str]] = typer.Option(
-        None, "--stack", help="Tech stack(s) to use for project setup (can be used multiple times)"
+        None,
+        "--stack",
+        help="Tech stack(s) to use for project setup (can be used multiple times)",
     ),
     from_project_type: Optional[str] = typer.Option(
-        None, "--from-project-type", help="Use predefined project type as base configuration"
+        None,
+        "--from-project-type",
+        help="Use predefined project type as base configuration",
     ),
     force: bool = typer.Option(
-        False, "--force", "-f", help="Overwrite existing .vscode files without prompting"
+        False,
+        "--force",
+        "-f",
+        help="Overwrite existing .vscode files without prompting",
     ),
 ) -> None:
     """Set up .vscode/ configuration files for a project."""
@@ -283,14 +292,25 @@ def setup_project(
 
 @app.command()
 def pull(
-    app_alias: Optional[str] = typer.Argument(None, help="Alias of the source application (required unless --from-project is used)"),
-    layer_type: str = typer.Option(..., "--to", help="Target layer type: base, app, stack, project"),
-    layer_name: Optional[str] = typer.Argument(None, help="Layer name (required for stack, optional for app/project)"),
+    app_alias: Optional[str] = typer.Argument(
+        None,
+        help="Alias of the source application (required unless --from-project is used)",
+    ),
+    layer_type: str = typer.Option(
+        ..., "--to", help="Target layer type: base, app, stack, project"
+    ),
+    layer_name: Optional[str] = typer.Argument(
+        None, help="Layer name (required for stack, optional for app/project)"
+    ),
     from_project: Optional[str] = typer.Option(
-        None, "--from-project", help="Pull from project .vscode directory instead of app"
+        None,
+        "--from-project",
+        help="Pull from project .vscode directory instead of app",
     ),
     include_extensions: bool = typer.Option(
-        False, "--include-extensions", help="Pull installed extensions list (not available for project mode)"
+        False,
+        "--include-extensions",
+        help="Pull installed extensions list (not available for project mode)",
     ),
     include_keybindings: bool = typer.Option(
         False, "--include-keybindings", help="Pull keybindings.json"
@@ -299,16 +319,23 @@ def pull(
         False, "--include-snippets", help="Pull snippets directory"
     ),
     settings_only: bool = typer.Option(
-        False, "--settings-only", help="Only pull settings.json (default if no other flags specified)"
+        False,
+        "--settings-only",
+        help="Only pull settings.json (default if no other flags specified)",
     ),
     overwrite: bool = typer.Option(
         False, "--overwrite", help="Overwrite existing files without prompting"
     ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", "-n", help="Show what would be pulled without making changes"
+        False,
+        "--dry-run",
+        "-n",
+        help="Show what would be pulled without making changes",
     ),
     full_preview: bool = typer.Option(
-        False, "--full-preview", help="Show full content preview in pager (like git diff)"
+        False,
+        "--full-preview",
+        help="Show full content preview in pager (like git diff)",
     ),
     no_pager: bool = typer.Option(
         False, "--no-pager", help="Disable pager for full preview output"
@@ -328,18 +355,24 @@ def pull(
 
         # Validate arguments
         if from_project and app_alias:
-            console.print("[red]Error:[/red] Cannot specify both app_alias and --from-project")
+            console.print(
+                "[red]Error:[/red] Cannot specify both app_alias and --from-project"
+            )
             raise typer.Exit(1)
-        
+
         if not from_project and not app_alias:
-            console.print("[red]Error:[/red] Must specify either app_alias or --from-project")
+            console.print(
+                "[red]Error:[/red] Must specify either app_alias or --from-project"
+            )
             raise typer.Exit(1)
-        
+
         # Warn about extensions in project mode
         if from_project and include_extensions:
-            console.print("[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring")
+            console.print(
+                "[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring"
+            )
             include_extensions = False
-        
+
         # Convert from_project to Path if provided
         project_path = Path(from_project) if from_project else None
 
@@ -369,10 +402,17 @@ def pull(
 
 @app.command()
 def edit(
-    layer_type: str = typer.Argument(..., help="Layer type: base, app, stack, project, live"),
-    layer_name: Optional[str] = typer.Argument(None, help="Layer name (not needed for base)"),
+    layer_type: str = typer.Argument(
+        ..., help="Layer type: base, app, stack, project, live"
+    ),
+    layer_name: Optional[str] = typer.Argument(
+        None, help="Layer name (not needed for base)"
+    ),
     file_type: str = typer.Option(
-        "settings", "--file-type", "-t", help="File type: settings, keybindings, extensions, snippets"
+        "settings",
+        "--file-type",
+        "-t",
+        help="File type: settings, keybindings, extensions, snippets",
     ),
 ) -> None:
     """Open configuration files for editing."""
