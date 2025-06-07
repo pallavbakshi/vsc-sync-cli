@@ -86,7 +86,7 @@ configuration, even with many stacks and editor variants in play.
 Run:
 
 ```bash
-vsc-sync edit base --file-type keybindings --sort --yes
+vsc-sync edit base --keybindings --sort --yes
 ```
 
 to get an alphabetised, deduplicated `keybindings.json` that is much easier to

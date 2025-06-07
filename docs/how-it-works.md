@@ -39,3 +39,9 @@ No credentials ever touch disk.  Tokens are stored in your OS’s credential sto
 * **Config management** – `vsc_sync.core.config_manager`
 
 Dive into the [API reference](reference/vsc_sync.md) if you’d like to use these building blocks programmatically.
+
+!!! warning "Pull overwrites repository files"
+    The `vsc-sync pull` command writes *into* your `vscode-configs` repository.
+    Any existing files in the target layer will be replaced (after a prompt,
+    unless you pass `--overwrite`).  Make sure you commit or back-up before
+    pulling large changes.

@@ -43,6 +43,33 @@ vsc-sync edit --dry-run --verbose
 
 ---
 
+## Pulling changes back into the repo
+
+`vsc-sync pull` copies configuration *from* an editor (or project) *into* your
+`vscode-configs` repository layer. Existing files in the target layer are
+overwritten after a confirmation prompt—use `--overwrite` to skip the prompt
+if you’re scripting.
+
+Examples
+
+```bash
+# pull settings.json only (default behaviour)
+vsc-sync pull vscode --to base
+
+# pull keybindings but leave settings.json untouched
+vsc-sync pull vscodium --to base --no-settings --keybindings
+
+# pull everything and overwrite without asking (dangerous!)
+vsc-sync pull vscode --to base \
+  --keybindings --extensions --snippets \
+  --overwrite
+```
+
+Always inspect the diff and commit your repository after a pull so that you
+can revert unintended changes.
+
+---
+
 ## Advanced flags
 
 * `--diff` – print patch instead of writing files.
@@ -55,7 +82,7 @@ vsc-sync edit --dry-run --verbose
 Need a tidy, alphabetised keybindings list?
 
 ```bash
-vsc-sync edit base --file-type keybindings --sort --yes
+vsc-sync edit base --keybindings --sort --yes
 ```
 
 The command will:

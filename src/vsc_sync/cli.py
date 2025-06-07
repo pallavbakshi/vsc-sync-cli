@@ -290,7 +290,14 @@ def setup_project(
         raise typer.Exit(1)
 
 
-@app.command()
+# --------------------------------------------------------------------------------------
+# PULL COMMAND
+# --------------------------------------------------------------------------------------
+
+@app.command(help=(
+    "Pull configurations from an application or project into the vscode-configs "
+    "repository.  [bold red]⚠ Existing files in the target layer may be overwritten![/bold red]"
+))
 def pull(
     app_alias: Optional[str] = typer.Argument(
         None,
@@ -322,7 +329,9 @@ def pull(
         False, "--snippets", help="Include snippets directory"
     ),
     overwrite: bool = typer.Option(
-        False, "--overwrite", help="Overwrite existing files without prompting"
+        False,
+        "--overwrite",
+        help="[dangerous] Overwrite existing files without prompting",
     ),
     dry_run: bool = typer.Option(
         False,
@@ -406,16 +415,26 @@ def edit(
     layer_name: Optional[str] = typer.Argument(
         None, help="Layer name (not needed for base)"
     ),
-    file_type: str = typer.Option(
-        "settings",
-        "--file-type",
-        "-t",
-        help="File type: settings, keybindings, extensions, snippets",
+    # Mutually-exclusive file-type flags (default: settings)
+    settings_flag: bool = typer.Option(
+        False, "--settings", help="Edit settings.json"
+    ),
+    keybindings_flag: bool = typer.Option(
+        False, "--keybindings", help="Edit keybindings.json"
+    ),
+    extensions_flag: bool = typer.Option(
+        False, "--extensions", help="Edit extensions.json"
+    ),
+    snippets_flag: bool = typer.Option(
+        False, "--snippets", help="Edit snippets directory"
+    ),
+    tasks_flag: bool = typer.Option(
+        False, "--tasks", help="Edit tasks.json"
     ),
     sort: bool = typer.Option(
         False,
         "--sort",
-        help="Sort keybindings.json (only valid when --file-type keybindings)",
+        help="Sort keybindings.json (only when editing keybindings)",
     ),
     yes: bool = typer.Option(
         False,
@@ -437,6 +456,23 @@ def edit(
             raise typer.Exit(1)
 
         edit_command = EditCommand(config_manager)
+        # Determine chosen file type
+        flag_map = {
+            "settings": settings_flag,
+            "keybindings": keybindings_flag,
+            "extensions": extensions_flag,
+            "snippets": snippets_flag,
+            "tasks": tasks_flag,
+        }
+
+        chosen = [name for name, val in flag_map.items() if val]
+
+        if len(chosen) > 1:
+            console.print("[red]Error:[/red] Please specify only one of --settings/--keybindings/--extensions/--snippets/--tasks")
+            raise typer.Exit(1)
+
+        file_type = chosen[0] if chosen else "settings"
+
         edit_command.run(
             layer_type=layer_type,
             layer_name=layer_name,
