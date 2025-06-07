@@ -50,4 +50,20 @@ vsc-sync edit --dry-run --verbose
 * `--only <component>` – restrict operation to `extensions`, `settings`, `snippets`, `tasks`.
 * `--force` – overwrite local changes even if conflict detected.
 
+### Sorting keybindings
+
+Need a tidy, alphabetised keybindings list?
+
+```bash
+vsc-sync edit base --file-type keybindings --sort --yes
+```
+
+The command will:
+1. Remove duplicate entries (same `key` + `when` – last one wins),
+2. Sort so chords starting with `-` are listed first, then everything else in
+   alphabetical order,
+3. Rewrite the file with 2-space indentation.
+
+If you omit `--yes` you’ll be prompted before the file is overwritten.
+
 See `vsc-sync <command> --help` for all options.

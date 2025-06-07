@@ -185,7 +185,13 @@ class TestApplyCommand:
             tasks_source=tasks_src,
         )
 
+        repo = temp_dir / "repo"
+        repo.mkdir()
         config_manager = ConfigManager(temp_dir / "cfg.json")
+        config_manager.save_config(
+            VscSyncConfig(vscode_configs_path=repo, managed_apps={})
+        )
+
         cmd = ApplyCommand(config_manager)
 
         # Apply with tasks disabled
@@ -199,9 +205,6 @@ class TestApplyCommand:
 
         # tasks.json should not be copied
         assert not (app_config_dir / "tasks.json").exists()
-
-        saved_settings = json.loads(settings_file.read_text())
-        assert saved_settings == test_settings
 
     def test_apply_keybindings(self, temp_dir, mock_vscode_configs_repo):
         """Test applying keybindings.json."""

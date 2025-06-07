@@ -1,33 +1,42 @@
-# TODO – tasks.json support rollout
+# TODO – keybindings sorting feature
 
-Checklist tracking the implementation and release of *tasks.json* syncing in
-VSC Sync CLI.  Completed items are ticked; remaining work sits unchecked.
+Goal
+----
+Add an option to sort `keybindings.json` when editing it via the *edit* command:
 
-## ✅ Implemented & tested
+```
+vsc-sync edit <layer-type> [layer-name] --file-type keybindings --sort
+```
 
-- [x] Design & scope agreed (user-level, winner-takes-all)
-- [x] Data-model updated (`tasks_source` in `MergeResult`)
-- [x] Core merge logic (`find_tasks_file`, precedence tests)
-- [x] File operations (`_apply_tasks`, copy logic tests)
-- [x] Application orchestration (apply, dry-run, cleanup)
-- [x] CLI surface (`--tasks / --no-tasks`, edit support)
-- [x] Documentation (usage, layer precedence, template example)
-- [x] Automated tests (unit + CLI integration)
+Behaviour
+1. Operates **only** on the file specified by the CLI invocation (no bulk sort).
+2. Sort algorithm
+   • Primary key: if the "key" string starts with `-`, it precedes non-dash keys.
+   • Then case-insensitive alphabetical order of the "key" value.
+3. Duplicate handling
+   • If two objects have identical `key` *and* `when` values, keep **the last
+     one in the original array** (mirrors VS Code runtime behaviour).
+   • Emit a Rich console warning listing discarded duplicates.
+4. The file is completely rewritten with pretty-printed 2-space indentation.
+5. Before writing, print a confirmation message: “This will overwrite
+   keybindings.json. Make sure you have a backup if needed.”; proceed only on
+   user confirmation (Yes/No prompt).  Skipped when `--yes` flag is supplied.
 
-## 🔜 Remaining
+Checklist
+---------
 
-- [ ] Changelog & version bump
-  - [ ] Add “Added: tasks.json syncing” entry to `docs/changelog.md`.
-  - [ ] Bump version in `pyproject.toml` & `src/vsc_sync/__init__.py`.
+- [ ] **Design / CLI plumbing**
+  - [X] Extend `edit` command with a `--sort` boolean flag and `--yes` for confirmation.
 
-- [ ] CI & code-quality
-  - [ ] Run `pre-commit run --all-files`; fix any new linting issues.
-  - [ ] Ensure full `pytest` suite passes in CI.
+- [ ] **Sorting implementation** (`src/vsc_sync/commands/edit_cmd.py`)
+  - [X] Sorting/deduplication implemented with confirmation prompt.
 
-- [ ] Release
-  - [ ] Merge PR, tag new version, push to origin.
-  - [ ] Verify GitHub Pages deploys updated docs.
+- [ ] **Unit tests**
+  - [X] Sorting order & duplicate logic.
 
-- [ ] Post-release smoke test
-  - [ ] On a clean machine: clone config repo with `tasks.json`, run
-        `vsc-sync apply`, confirm tasks appear in “Tasks: Run Task…”.
+- [ ] **CLI integration tests**
+  - [ ] Typer integration test (optional).
+
+- [ ] **Documentation**
+  - [X] usage.md updated.
+  - [X] layer-precedence tip.

@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from vsc_sync.commands.apply_cmd import ApplyCommand
-from vsc_sync.models import AppDetails, MergeResult, LayerInfo
+from vsc_sync.models import AppDetails, MergeResult, LayerInfo, VscSyncConfig
 from vsc_sync.config import ConfigManager
 
 
@@ -32,11 +32,16 @@ def test_apply_tasks_file(temp_dir):
         tasks_source=tasks_source,
     )
 
-    # Minimal ConfigManager substitute
-    config_manager = ConfigManager(temp_dir / "config.json")
-    config_manager._config = None  # Not used in _apply_tasks
+    # Minimal ConfigManager with dummy repo path
+    repo_path = temp_dir / "repo"
+    repo_path.mkdir()
 
-    cmd = ApplyCommand(config_manager)
+    cfg_manager = ConfigManager(temp_dir / "config.json")
+    cfg_manager.save_config(
+        VscSyncConfig(vscode_configs_path=repo_path, managed_apps={})
+    )
+
+    cmd = ApplyCommand(cfg_manager)
 
     # Call the private method directly
     cmd._apply_tasks(app_details, tasks_source)

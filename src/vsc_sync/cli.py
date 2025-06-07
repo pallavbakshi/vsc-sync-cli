@@ -414,6 +414,17 @@ def edit(
         "-t",
         help="File type: settings, keybindings, extensions, snippets",
     ),
+    sort: bool = typer.Option(
+        False,
+        "--sort",
+        help="Sort keybindings.json (only valid when --file-type keybindings)",
+    ),
+    yes: bool = typer.Option(
+        False,
+        "--yes",
+        "-y",
+        help="Assume yes for overwrite confirmation while sorting",
+    ),
 ) -> None:
     """Open configuration files for editing."""
     try:
@@ -432,6 +443,8 @@ def edit(
             layer_type=layer_type,
             layer_name=layer_name,
             file_type=file_type,
+            sort=sort,
+            yes=yes,
         )
 
     except VscSyncError as e:

@@ -44,6 +44,8 @@ class EditCommand:
         layer_type: str,
         layer_name: Optional[str] = None,
         file_type: str = "settings",
+        sort: bool = False,
+        yes: bool = False,
     ) -> None:
         """Execute the edit command."""
         try:
@@ -65,7 +67,11 @@ class EditCommand:
 
                 self._create_file_if_needed(file_path, file_type)
 
-            # Step 4: Open file in editor
+            # Step 4: Sort keybindings if requested
+            if sort and file_type == "keybindings":
+                self._sort_keybindings(file_path, yes=yes)
+
+            # Step 5: Open file in editor
             self._open_file_in_editor(file_path)
 
         except Exception as e:
@@ -166,6 +172,91 @@ class EditCommand:
             return '{\n  "version": "2.0.0",\n  "tasks": []\n}\n'
         else:
             return "{}\n"
+
+    # ------------------------------------------------------------------
+    # Keybindings sorting
+    # ------------------------------------------------------------------
+
+    def _sort_keybindings(self, file_path: Path, yes: bool = False) -> None:
+        """Sort and deduplicate keybindings.json in-place.
+
+        Sorting rule: entries whose key starts with '-' come first, then
+        alphabetical order (case-insensitive).
+        Duplicates (same key + when) keep the last entry.
+        """
+        if not file_path.exists():
+            console.print(f"[red]Cannot sort: {file_path} does not exist[/red]")
+            return
+
+        try:
+            import json, re
+
+            raw_text = file_path.read_text(encoding="utf-8")
+
+            # Strip // line comments
+            clean_lines = []
+            for line in raw_text.splitlines():
+                stripped = line.lstrip()
+                if stripped.startswith("//"):
+                    continue
+                clean_lines.append(line)
+
+            cleaned = "\n".join(clean_lines)
+
+            # Remove /* block comments */
+            cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.S)
+
+            # Trim everything before first '[' and after last ']'
+            start = cleaned.find("[")
+            end = cleaned.rfind("]")
+            if start == -1 or end == -1:
+                console.print("[red]Could not find JSON array in keybindings file.[/red]")
+                return
+            cleaned = cleaned[start : end + 1]
+
+            bindings = json.loads(cleaned)
+            if not isinstance(bindings, list):
+                console.print("[red]keybindings.json is not a JSON array – aborting sort[/red]")
+                return
+
+            # Deduplicate keeping last occurrence
+            seen = {}
+            duplicates_removed = 0
+            for entry in bindings:
+                key = entry.get("key")
+                when = entry.get("when", "")
+                ident = (key, when)
+                if ident in seen:
+                    duplicates_removed += 1
+                seen[ident] = entry
+
+            unique_bindings = list(seen.values())
+
+            # Sort according to rule
+            def sort_key(item):
+                k = item.get("key", "")
+                return (not k.startswith("-"), k.lower())
+
+            unique_bindings.sort(key=sort_key)
+
+            # Confirmation
+            if not yes:
+                console.print(
+                    f"This will overwrite [bold]{file_path}[/bold] with the sorted list (\[entries: {len(unique_bindings)}; duplicates removed: {duplicates_removed}])."
+                )
+                if not Confirm.ask("Proceed?", default=True):
+                    console.print("[yellow]Sort cancelled.[/yellow]")
+                    return
+
+            # Write back pretty-printed JSON
+            file_path.write_text(json.dumps(unique_bindings, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+            console.print(
+                f"[green]✓[/green] keybindings sorted ({duplicates_removed} duplicates removed)"
+            )
+
+        except Exception as exc:
+            console.print(f"[red]Failed to sort keybindings:[/red] {exc}")
 
     def _open_file_in_editor(self, file_path: Path) -> None:
         """Open the file in the configured or system default editor."""

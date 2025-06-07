@@ -80,3 +80,15 @@ or create dedicated stacks (e.g. `stacks/linux`) and pass the appropriate
 
 Keeping this mental model in mind makes it easy to reason about the final
 configuration, even with many stacks and editor variants in play.
+
+## Handy tip – sort your keybindings
+
+Run:
+
+```bash
+vsc-sync edit base --file-type keybindings --sort --yes
+```
+
+to get an alphabetised, deduplicated `keybindings.json` that is much easier to
+scan by hand.  Entries beginning with a leading dash (`-`) are grouped at the
+top so you can find chord prefixes quickly.
