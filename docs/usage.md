@@ -78,17 +78,21 @@ can revert unintended changes.
 
 ### Sorting keybindings
 
-Need a tidy, alphabetised keybindings list?
+Need a tidy, alphabetised keybindings list that groups *general* shortcuts
+before their more specific variants?
 
 ```bash
 vsc-sync edit base --keybindings --sort --yes
 ```
 
 The command will:
-1. Remove duplicate entries (same `key` + `when` – last one wins),
-2. Sort so chords starting with `-` are listed first, then everything else in
-   alphabetical order,
-3. Rewrite the file with 2-space indentation.
+1. Sort primarily by the `key` string, case-insensitive.
+2. Within the same key it places shortcuts *without* a `when` clause first,
+   followed by increasingly specific variants (heuristic: fewer logical
+   operators and shorter length ⇒ more general).
+3. Keep duplicates intact so you can spot true copy-pastes versus intentional
+   overlaps.
+4. Rewrite the file with 2-space indentation.
 
 If you omit `--yes` you’ll be prompted before the file is overwritten.
 

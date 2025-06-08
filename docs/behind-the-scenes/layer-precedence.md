@@ -89,6 +89,11 @@ Run:
 vsc-sync edit base --keybindings --sort --yes
 ```
 
-to get an alphabetised, deduplicated `keybindings.json` that is much easier to
-scan by hand.  Entries beginning with a leading dash (`-`) are grouped at the
-top so you can find chord prefixes quickly.
+to get an alphabetised `keybindings.json` grouped by key and `when` clause so
+you can quickly spot overlaps or conflicts.  The command keeps *all* entries –
+even exact duplicates – because sometimes two identical shortcuts are
+deliberately defined in different extensions or contexts.
+
+Entries starting with a leading dash (`-`) naturally appear near the top
+because `-` sorts before letters in ASCII, making it easy to inspect chord
+prefixes (`-ctrl+k`, `-ctrl+w`, …).

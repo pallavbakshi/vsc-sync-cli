@@ -10,4 +10,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) 
 
 * Initial MkDocs documentation site.
 * `--tasks/--no-tasks` flag to sync tasks.json.
-* `--sort` flag for keybindings.json to deduplicate & alphabetise bindings.
+* `--sort` flag for keybindings.json to alphabetise bindings and group them by
+  `when` clause specificity.

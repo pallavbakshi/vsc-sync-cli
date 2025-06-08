@@ -178,11 +178,28 @@ class EditCommand:
     # ------------------------------------------------------------------
 
     def _sort_keybindings(self, file_path: Path, yes: bool = False) -> None:
-        """Sort and deduplicate keybindings.json in-place.
+        """Sort *keybindings.json* entries in-place according to the Product
+        Requirements Document (PRD) for the *VS Code Keybinding Sorter*.
 
-        Sorting rule: entries whose key starts with '-' come first, then
-        alphabetical order (case-insensitive).
-        Duplicates (same key + when) keep the last entry.
+        The rules implemented below are a close match of the "best-effort" MVP
+        specification in the PRD (v1.0 – 2023-10-26):
+
+        1. Primary sort key  –  ``key`` (alphabetically, case-insensitive).
+        2. Secondary key     –  bindings **without** a ``when`` clause come
+           before bindings **with** a ``when`` clause.
+        3. Tertiary key      –  heuristic specificity for the ``when`` clause
+           (apparent *generality* → *specificity*):
+              • First by the number of logical operators (``&&``, ``||``)
+                – fewer operators are considered more general.
+              • Then by the length of the ``when`` string – shorter is more
+                general.
+        4. Quaternary key    –  alphabetical order of the ``when`` string.
+        5. Final tie-breaker –  alphabetical order of the ``command`` string.
+
+        The routine **does not remove duplicates** (FR7 of the PRD – identical
+        entries are simply placed next to each other after sorting).  A future
+        CLI flag may enable deduplication but that is *out of scope* for the
+        current MVP.
         """
         if not file_path.exists():
             console.print(f"[red]Cannot sort: {file_path} does not exist[/red]")
@@ -193,67 +210,108 @@ class EditCommand:
 
             raw_text = file_path.read_text(encoding="utf-8")
 
-            # Strip // line comments
-            clean_lines = []
+            # -----------------------------------------------------------------
+            # Best-effort comment stripping – VS Code allows // and /* */ comments
+            # in *keybindings.json*.  We remove them so that a standard ``json``
+            # parser can handle the file.
+            # -----------------------------------------------------------------
+
+            # 1. Line comments
+            cleaned_lines = []
             for line in raw_text.splitlines():
                 stripped = line.lstrip()
                 if stripped.startswith("//"):
                     continue
-                clean_lines.append(line)
+                cleaned_lines.append(line)
 
-            cleaned = "\n".join(clean_lines)
+            cleaned = "\n".join(cleaned_lines)
 
-            # Remove /* block comments */
+            # 2. Block comments
             cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.S)
 
-            # Trim everything before first '[' and after last ']'
+            # 3. Keep only the JSON array portion (everything between the first
+            #    '[' and the last ']') – guards against trailing characters.
             start = cleaned.find("[")
             end = cleaned.rfind("]")
             if start == -1 or end == -1:
-                console.print("[red]Could not find JSON array in keybindings file.[/red]")
+                console.print("[red]Could not locate a JSON array inside the keybindings file.[/red]")
                 return
+
             cleaned = cleaned[start : end + 1]
 
-            bindings = json.loads(cleaned)
-            if not isinstance(bindings, list):
-                console.print("[red]keybindings.json is not a JSON array – aborting sort[/red]")
+            try:
+                bindings = json.loads(cleaned)
+            except json.JSONDecodeError as exc:
+                console.print(f"[red]Failed to parse keybindings.json:[/red] {exc}")
                 return
 
-            # Deduplicate keeping last occurrence
-            seen = {}
-            duplicates_removed = 0
-            for entry in bindings:
-                key = entry.get("key")
-                when = entry.get("when", "")
-                ident = (key, when)
-                if ident in seen:
-                    duplicates_removed += 1
-                seen[ident] = entry
+            if not isinstance(bindings, list):
+                console.print("[red]keybindings.json must contain a top-level JSON array – aborting sort.[/red]")
+                return
 
-            unique_bindings = list(seen.values())
+            # -----------------------------------------------------------------
+            # Sorting helpers
+            # -----------------------------------------------------------------
 
-            # Sort according to rule
-            def sort_key(item):
-                k = item.get("key", "")
-                return (not k.startswith("-"), k.lower())
+            def _num_logical_ops(when_clause: str) -> int:
+                """Return how many logical operators are present in *when_clause*."""
+                # Count occurrences of the two operator tokens.  Overlapping
+                # tokens are impossible because they differ by the first char.
+                return when_clause.count("&&") + when_clause.count("||")
 
-            unique_bindings.sort(key=sort_key)
+            def _sort_tuple(item):
+                """Build a tuple implementing the PRD ordering rules."""
+                if not isinstance(item, dict):
+                    # Non-dict items go to the top to avoid crashing; should not
+                    # happen with valid VS Code keybindings.json.
+                    return ("", 0, 0, 0, "", "")
 
-            # Confirmation
+                key_str = str(item.get("key", ""))
+
+                when_raw = item.get("when")
+                has_when = 1 if when_raw else 0  # 0 → *no* when, comes first
+
+                when_str = when_raw if when_raw else ""
+
+                # Heuristic specificity score: (number_of_ops, len_when)
+                num_ops = _num_logical_ops(when_str)
+                len_when = len(when_str)
+
+                command_str = str(item.get("command", ""))
+
+                return (
+                    key_str.lower(),  # primary key (case-insensitive)
+                    has_when,         # secondary – general before specific
+                    num_ops,          # tertiary (part 1) – general before specific
+                    len_when,         # tertiary (part 2)
+                    when_str.lower(), # quaternary
+                    command_str.lower(),  # tie-breaker
+                )
+
+            bindings.sort(key=_sort_tuple)
+
+            # -----------------------------------------------------------------
+            # Confirmation prompt (unless --yes/yes=True)
+            # -----------------------------------------------------------------
             if not yes:
                 console.print(
-                    f"This will overwrite [bold]{file_path}[/bold] with the sorted list ([entries: {len(unique_bindings)}; duplicates removed: {duplicates_removed}])."
+                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted list (entries: {len(bindings)})."
                 )
                 if not Confirm.ask("Proceed?", default=True):
                     console.print("[yellow]Sort cancelled.[/yellow]")
                     return
 
-            # Write back pretty-printed JSON
-            file_path.write_text(json.dumps(unique_bindings, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+            # -----------------------------------------------------------------
+            # Write the sorted array back to disk – pretty-printed JSON.
+            # (Comment preservation is a known limitation; see PRD §5.1 FR8.)
+            # -----------------------------------------------------------------
 
-            console.print(
-                f"[green]✓[/green] keybindings sorted ({duplicates_removed} duplicates removed)"
+            file_path.write_text(
+                json.dumps(bindings, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
             )
+
+            console.print(f"[green]✓[/green] keybindings sorted")
 
         except Exception as exc:
             console.print(f"[red]Failed to sort keybindings:[/red] {exc}")
