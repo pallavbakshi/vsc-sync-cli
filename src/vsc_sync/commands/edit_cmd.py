@@ -68,8 +68,11 @@ class EditCommand:
                 self._create_file_if_needed(file_path, file_type)
 
             # Step 4: Sort keybindings if requested
-            if sort and file_type == "keybindings":
-                self._sort_keybindings(file_path, yes=yes)
+            if sort:
+                if file_type == "keybindings":
+                    self._sort_keybindings(file_path, yes=yes)
+                elif file_type == "settings":
+                    self._sort_settings(file_path, yes=yes)
 
             # Step 5: Open file in editor
             self._open_file_in_editor(file_path)
@@ -315,6 +318,130 @@ class EditCommand:
 
         except Exception as exc:
             console.print(f"[red]Failed to sort keybindings:[/red] {exc}")
+
+    # ------------------------------------------------------------------
+    # Settings sorting
+    # ------------------------------------------------------------------
+
+    def _sort_settings(self, file_path: Path, yes: bool = False) -> None:
+        """Sort and deduplicate *settings.json* in-place.
+
+        Behaviour (matches Settings Sorter PRD v1.0):
+        • Keep only the **last** occurrence of any duplicate top-level key.
+        • Alphabetically sort the remaining keys.
+        • Preserve values as-is (including nested objects/arrays).
+        • Comments are stripped during processing and therefore lost in the
+          output (best-effort limitation).
+        """
+
+        if not file_path.exists():
+            console.print(f"[red]Cannot sort: {file_path} does not exist[/red]")
+            return
+
+        try:
+            import json, re
+
+            raw_text = file_path.read_text(encoding="utf-8")
+
+            # ------------------------------------------------------------
+            # Strip // and /* */ comments so the stock JSON parser works.
+            # ------------------------------------------------------------
+            cleaned_lines = []
+            for line in raw_text.splitlines():
+                stripped = line.lstrip()
+                if stripped.startswith("//"):
+                    continue
+                cleaned_lines.append(line)
+
+            cleaned = "\n".join(cleaned_lines)
+            cleaned = re.sub(r"/\*.*?\*/", "", cleaned, flags=re.S)
+
+            # Remove inline // comments that appear after a value on the same
+            # line.  This is a naïve implementation but works well for typical
+            # VS Code settings files where string values contain very few
+            # double-slash sequences.
+            cleaned = re.sub(r"//.*", "", cleaned)
+
+            # Keep the substring between the first '{' and the last '}'.
+            start = cleaned.find("{")
+            end = cleaned.rfind("}")
+            if start == -1 or end == -1:
+                console.print("[red]Could not locate a JSON object inside the settings file.[/red]")
+                return
+
+            cleaned = cleaned[start : end + 1]
+
+            # ------------------------------------------------------------
+            # Parse while detecting duplicates at the *root* level.
+            # ------------------------------------------------------------
+            duplicates_removed = 0
+            messages = []
+
+            root_processed = False  # flag to identify first (root) object
+
+            def object_pairs_hook(pairs):
+                nonlocal root_processed, duplicates_removed
+
+                # Convert list-of-pairs → dict but track duplicates only for
+                # the *root* object (first call).
+                target_dict = {}
+                seen = set()
+
+                for key, value in pairs:
+                    if isinstance(value, list):
+                        # Nested objects are returned as list-of-pairs if they
+                        # contain duplicates; convert them recursively.
+                        value = object_pairs_hook(value) if value and isinstance(value[0], tuple) else value
+
+                    if not root_processed:
+                        if key in target_dict and key not in seen:
+                            duplicates_removed += 1
+                        target_dict[key] = value  # last wins
+                    else:
+                        # For nested objects we don't care about duplicate log
+                        target_dict[key] = value
+
+                    seen.add(key)
+
+                root_processed = True
+                return target_dict
+
+            try:
+                parsed_settings = json.loads(cleaned, object_pairs_hook=object_pairs_hook)
+            except json.JSONDecodeError as exc:
+                console.print(f"[red]Failed to parse settings.json:[/red] {exc}")
+                return
+
+            # ------------------------------------------------------------
+            # Sort keys alphabetically.
+            # ------------------------------------------------------------
+            sorted_settings = {k: parsed_settings[k] for k in sorted(parsed_settings.keys(), key=str.lower)}
+
+            # ------------------------------------------------------------
+            # Prompt before overwriting unless --yes supplied.
+            # ------------------------------------------------------------
+            if not yes:
+                console.print(
+                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted settings file (entries: {len(sorted_settings)}; duplicates removed: {duplicates_removed})."
+                )
+                if not Confirm.ask("Proceed?", default=True):
+                    console.print("[yellow]Sort cancelled.[/yellow]")
+                    return
+
+            # ------------------------------------------------------------
+            # Write back – pretty-printed JSON (2-space indent like VS Code).
+            # ------------------------------------------------------------
+            file_path.write_text(
+                json.dumps(sorted_settings, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+
+            console.print(
+                f"[green]✓[/green] settings sorted ({duplicates_removed} duplicates removed)"
+            )
+
+        except Exception as exc:
+            console.print(f"[red]Failed to sort settings:[/red] {exc}")
 
     def _open_file_in_editor(self, file_path: Path) -> None:
         """Open the file in the configured or system default editor."""
