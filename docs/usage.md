@@ -68,15 +68,15 @@ vsc-sync apply vscode --settings --stack python --stack web
 ```bash
 # Explicit layer ordering with simple names
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 python \
-  --layer2 vscode \
-  --layer3 personal
+  --layer base \
+  --layer python \
+  --layer vscode \
+  --layer personal
 
 # Mix simple names and full paths
 vsc-sync apply cursor --all \
-  --layer0 base \
-  --layer1 /custom/path/typescript-config
+  --layer base \
+  --layer /custom/path/typescript-config
 ```
 
 #### Layer Presets (Ultimate Convenience)
@@ -158,10 +158,10 @@ vsc-sync uses a three-tier resolution strategy:
 
 ```bash
 # All of these work automatically:
-vsc-sync apply vscode --settings --layer0 base           # Found in ~/vscode-configs/base/
-vsc-sync apply vscode --settings --layer0 python        # Found in ~/vscode-configs/stacks/python/
-vsc-sync apply vscode --settings --layer0 personal      # Alias from config.toml
-vsc-sync apply vscode --settings --layer0 /custom/path  # Literal path
+vsc-sync apply vscode --settings --layer base           # Found in ~/vscode-configs/base/
+vsc-sync apply vscode --settings --layer python         # Found in ~/vscode-configs/stacks/python/
+vsc-sync apply vscode --settings --layer personal       # Alias from config.toml
+vsc-sync apply vscode --settings --layer /custom/path   # Literal path
 ```
 
 ---
@@ -294,7 +294,7 @@ vsc-sync apply windsurf --all --preset python-dev
 vsc-sync setup-project ./my-react-app --stack web --stack react
 
 # Apply project-specific settings
-vsc-sync apply vscode --config --layer0 base --layer1 web --layer2 react-app
+vsc-sync apply vscode --config --layer base --layer web --layer react-app
 ```
 
 ### Extension Development Workflow
@@ -303,7 +303,7 @@ vsc-sync apply vscode --config --layer0 base --layer1 web --layer2 react-app
 vsc-sync apply vscode --extensions --replace-all
 
 # Add specific extensions for testing
-vsc-sync apply vscode --extensions --layer0 base --layer1 extension-dev
+vsc-sync apply vscode --extensions --layer base --layer extension-dev
 ```
 
 ### Configuration Iteration
@@ -331,7 +331,7 @@ vsc-sync config --show
 ls ~/vscode-configs/
 
 # Use full paths as fallback
-vsc-sync apply vscode --settings --layer0 /full/path/to/base
+vsc-sync apply vscode --settings --layer /full/path/to/base
 ```
 
 ### Extension Installation Failures
@@ -397,7 +397,7 @@ vsc-sync config --edit
 | Option | Usage |
 |--------|-------|
 | `--stack python` | Standard stack-based layers |
-| `--layer0 base --layer1 python` | Custom layer ordering |
+| `--layer base --layer python` | Custom layer ordering |
 | `--preset python-dev` | Predefined layer combinations |
 
 Run any command with `--help` for detailed options and examples!

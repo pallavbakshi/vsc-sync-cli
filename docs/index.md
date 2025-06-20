@@ -9,7 +9,7 @@ Synchronize your VSCode-like configurations across multiple editors (VSCode, Cur
 * **🚀 Enhanced One-Command Setup** – `vsc-sync init` with guided TOML configuration
 * **🧠 Intelligent Layer Resolution** – Use simple names like `base`, `python`, `vscode` instead of full paths
 * **🎯 Opt-In Component Control** – Apply only what you specify: `--settings`, `--keybindings`, `--extensions`
-* **🔄 Custom Layer System** – Mix and match configurations with `--layer0`, `--layer1`, etc.
+* **🔄 Custom Layer System** – Stack layers in order with `--layer base --layer python --layer personal`
 * **📦 Layer Presets** – Common workflows in a single `--preset` flag
 * **💾 Local Extension Fallback** – Auto-install from `~/Documents/vscode-extension/` when marketplace fails
 * **🔗 Smart Keybinding Merging** – Combine keybindings from all layers instead of overwriting
@@ -38,13 +38,13 @@ Use simple names that automatically resolve to the right paths:
 ```bash
 # Before: Full paths required
 vsc-sync apply vscode --settings \
-  --layer0 ~/vscode-configs/base \
-  --layer1 ~/vscode-configs/stacks/python
+  --layer ~/vscode-configs/base \
+  --layer ~/vscode-configs/stacks/python
 
 # Now: Simple names work
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 python
+  --layer base \
+  --layer python
 ```
 
 ### Layer Presets for Common Workflows
@@ -136,7 +136,7 @@ vsc-sync apply vscode --all --preset python-dev
 **Web Developer with TypeScript**:
 ```bash
 vsc-sync apply cursor --config \
-  --layer0 base --layer1 web --layer2 typescript
+  --layer base --layer web --layer typescript
 ```
 
 **Extension Management**:

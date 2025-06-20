@@ -89,8 +89,8 @@ vsc-sync init --repo git@github.com:your-user/vscode-configs.git
    ✓ Intelligent layer resolution enabled
    
    What this enables:
-   • Use short names: --layer0 base --layer1 python
-   • Instead of full paths: --layer0 ~/vscode-configs/base
+   • Use short names: --layer base --layer python
+   • Instead of full paths: --layer ~/vscode-configs/base
    • Automatic discovery in: base/, apps/, stacks/, projects/
    ```
 
@@ -123,9 +123,9 @@ vsc-sync apply vscode --settings --stack python
 
 # 🆕 New custom layers with simple names
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 python \
-  --layer2 vscode
+  --layer base \
+  --layer python \
+  --layer vscode
 
 # 🆕 Use layer presets (defined in config.toml)
 vsc-sync apply vscode --all --preset python-dev
@@ -182,7 +182,7 @@ Here's a typical workflow for a Python developer:
 vsc-sync init --repo ~/vscode-configs
 
 # Apply basic configuration
-vsc-sync apply vscode --all --layer0 base --layer1 python
+vsc-sync apply vscode --all --layer base --layer python
 
 # Make adjustments in VSCode, then pull them back
 vsc-sync pull vscode --to stack python --settings --keybindings
@@ -205,7 +205,7 @@ vsc-sync apply vscode --all --preset python-dev
 
 # Or selectively apply components
 vsc-sync apply cursor --config --preset python-dev  # No extensions
-vsc-sync apply windsurf --extensions --layer0 base --layer1 python
+vsc-sync apply windsurf --extensions --layer base --layer python
 ```
 
 ### 4. Iteration and Updates
@@ -231,8 +231,8 @@ vsc-sync apply cursor --all --preset web-dev
 vsc-sync apply windsurf --all --preset web-dev
 
 # Or target specific editor configurations
-vsc-sync apply vscode --config --layer0 base --layer1 vscode --layer2 web
-vsc-sync apply cursor --config --layer0 base --layer1 cursor --layer2 web
+vsc-sync apply vscode --config --layer base --layer vscode --layer web
+vsc-sync apply cursor --config --layer base --layer cursor --layer web
 ```
 
 ---

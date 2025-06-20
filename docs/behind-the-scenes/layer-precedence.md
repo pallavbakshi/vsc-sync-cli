@@ -3,7 +3,7 @@
 VSC Sync CLI has two distinct layer systems for maximum flexibility:
 
 1. **Standard Layer System** (traditional) - for `--stack` flags
-2. **Custom Layer System** (new) - for `--layer0`, `--layer1`, etc. and `--preset` flags
+2. **Custom Layer System** (new) - for multiple `--layer` flags and `--preset` flags
 
 This page explains how both systems handle precedence and conflict resolution.
 
@@ -40,10 +40,10 @@ The custom layer system gives you complete control over layer ordering:
 
 ```bash
 vsc-sync apply vscode --settings \
-  --layer0 base \       # Applied first (lowest priority)
-  --layer1 python \     # Applied second
-  --layer2 vscode \     # Applied third  
-  --layer3 personal     # Applied last (highest priority)
+  --layer base \       # Applied first (lowest priority)
+  --layer python \     # Applied second
+  --layer vscode \     # Applied third  
+  --layer personal     # Applied last (highest priority)
 ```
 
 ### Layer Presets
@@ -54,7 +54,7 @@ vsc-sync apply vscode --settings --preset python-dev
 
 # Equivalent to:
 vsc-sync apply vscode --settings \
-  --layer0 base --layer1 python --layer2 personal
+  --layer base --layer python --layer personal
 ```
 
 ---
@@ -109,7 +109,7 @@ Settings are deeply merged across all layers. The merge algorithm in `vsc_sync/c
 
 ### New Behavior: Merge All Layers
 ```bash
-vsc-sync apply vscode --keybindings --layer0 base --layer1 python --layer2 personal
+vsc-sync apply vscode --keybindings --layer base --layer python --layer personal
 ```
 
 **Result**: Keybindings from all layers are combined:
@@ -145,7 +145,7 @@ vsc-sync apply vscode --keybindings --stack python --stack web
 **New way** (all layers combined):
 ```bash
 # All keybindings.json files are merged
-vsc-sync apply vscode --keybindings --layer0 base --layer1 python --layer2 web
+vsc-sync apply vscode --keybindings --layer base --layer python --layer web
 ```
 
 ---
@@ -175,9 +175,9 @@ web/snippets/javascript.json   → copied
 ### Settings Conflicts
 ```bash
 vsc-sync apply vscode --settings \
-  --layer0 base \      # "editor.tabSize": 2
-  --layer1 python \    # "editor.tabSize": 4  
-  --layer2 personal    # "editor.fontSize": 16
+  --layer base \      # "editor.tabSize": 2
+  --layer python \    # "editor.tabSize": 4  
+  --layer personal    # "editor.fontSize": 16
 
 # Result: tabSize=4 (python wins), fontSize=16 (personal only)
 ```
@@ -185,8 +185,8 @@ vsc-sync apply vscode --settings \
 ### Keybinding Conflicts
 ```bash
 vsc-sync apply vscode --keybindings \
-  --layer0 base \      # [{"key": "f5", "command": "workbench.action.debug.start"}]
-  --layer1 python      # [{"key": "f5", "command": "python.debugCurrentFile"}]
+  --layer base \      # [{"key": "f5", "command": "workbench.action.debug.start"}]
+  --layer python      # [{"key": "f5", "command": "python.debugCurrentFile"}]
 
 # Result: Both entries preserved, python wins due to array order
 ```
@@ -194,8 +194,8 @@ vsc-sync apply vscode --keybindings \
 ### Extension Conflicts
 ```bash
 vsc-sync apply vscode --extensions \
-  --layer0 base \      # ["ms-python.python", "ms-vscode.vscode-json"]
-  --layer1 python      # ["ms-python.python", "ms-python.pylint"]
+  --layer base \      # ["ms-python.python", "ms-vscode.vscode-json"]
+  --layer python      # ["ms-python.python", "ms-python.pylint"]
 
 # Result: ["ms-python.python", "ms-vscode.vscode-json", "ms-python.pylint"]
 # (duplicates removed automatically)
@@ -242,10 +242,10 @@ When using custom layers, resolution follows this priority:
 
 ```bash
 # These all work:
---layer0 base           # Found in ~/vscode-configs/base/
---layer1 python         # Found in ~/vscode-configs/stacks/python/
---layer2 personal       # Alias from config.toml
---layer3 /custom/path   # Literal path
+--layer base           # Found in ~/vscode-configs/base/
+--layer python         # Found in ~/vscode-configs/stacks/python/
+--layer personal       # Alias from config.toml
+--layer /custom/path   # Literal path
 ```
 
 ---
@@ -253,7 +253,7 @@ When using custom layers, resolution follows this priority:
 ## Mental Model
 
 > **Standard layers**: Automatic precedence (base → app → stacks)
-> **Custom layers**: Explicit precedence (--layer0 → --layer1 → --layer2...)
+> **Custom layers**: Explicit precedence (first --layer → second --layer → third --layer...)
 > **All systems**: Later layers win conflicts, keybindings merge instead of override
 
 Understanding these precedence rules helps you design layer structures that behave predictably and meet your specific configuration needs.

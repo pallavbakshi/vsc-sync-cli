@@ -53,7 +53,7 @@ path = "/path/to/config"
 description = "Human-readable description"
 
 [layer_presets]
-preset_name = ["layer1", "layer2", "layer3"]
+preset_name = ["base", "python", "personal"]
 
 [editor_settings.editor_name]
 auto_backup = true
@@ -76,13 +76,13 @@ vscode_configs_path = "./configs"
 ```bash
 # Without vscode_configs_path: Must use full paths
 vsc-sync apply vscode --settings \
-  --layer0 ~/vscode-configs/base \
-  --layer1 ~/vscode-configs/stacks/python
+  --layer ~/vscode-configs/base \
+  --layer ~/vscode-configs/stacks/python
 
 # With vscode_configs_path: Use simple names  
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 python
+  --layer base \
+  --layer python
 ```
 
 #### `[defaults]` Section
@@ -134,15 +134,15 @@ description = "Client A specific requirements"
 ```bash
 # Use aliases like any other layer name
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 work \      # Resolves to /company/shared/vscode-config
-  --layer2 personal    # Resolves to ~/my-configs/personal-settings.json
+  --layer base \
+  --layer work \      # Resolves to /company/shared/vscode-config
+  --layer personal    # Resolves to ~/my-configs/personal-settings.json
 
 # Mix aliases with intelligent names and literal paths
 vsc-sync apply cursor --all \
-  --layer0 base \               # Intelligent: ~/vscode-configs/base/
-  --layer1 client-a \           # Alias: ~/clients/client-a/.vscode-config
-  --layer2 /custom/project      # Literal path
+  --layer base \               # Intelligent: ~/vscode-configs/base/
+  --layer client-a \           # Alias: ~/clients/client-a/.vscode-config
+  --layer /custom/project      # Literal path
 ```
 
 #### `[layer_presets]` Section
@@ -262,16 +262,16 @@ path = "~/my-configs/personal.json"
 Resolution examples:
 ```bash
 # Intelligent resolution
---layer0 base      # → ~/vscode-configs/base/
---layer1 python    # → ~/vscode-configs/stacks/python/
---layer2 vscode    # → ~/vscode-configs/apps/vscode/
---layer3 my-app    # → ~/vscode-configs/projects/my-app/
+--layer base      # → ~/vscode-configs/base/
+--layer python    # → ~/vscode-configs/stacks/python/
+--layer vscode    # → ~/vscode-configs/apps/vscode/
+--layer my-app    # → ~/vscode-configs/projects/my-app/
 
 # Alias resolution  
---layer4 personal  # → ~/my-configs/personal.json
+--layer personal  # → ~/my-configs/personal.json
 
 # Literal path resolution
---layer5 /custom   # → /custom (as-is)
+--layer /custom   # → /custom (as-is)
 ```
 
 ---
@@ -462,7 +462,7 @@ project-beta = ["team-base", "project-beta", "personal"]
 vsc-sync config --show
 
 # Test layer resolution
-vsc-sync apply vscode --settings --layer0 base --dry-run
+vsc-sync apply vscode --settings --layer base --dry-run
 
 # Test preset resolution  
 vsc-sync apply vscode --all --preset python-dev --dry-run
@@ -566,7 +566,7 @@ vsc-sync pull vscode --to base --settings
 vsc-sync init  # Will detect existing setup and add TOML
 
 # Start using intelligent resolution
-vsc-sync apply vscode --settings --layer0 base --layer1 python
+vsc-sync apply vscode --settings --layer base --layer python
 
 # Create presets for common workflows
 vsc-sync config --edit
@@ -582,7 +582,7 @@ vsc-sync config --init
 vsc-sync config --edit
 
 # Test intelligent resolution
-vsc-sync apply vscode --settings --layer0 base --dry-run
+vsc-sync apply vscode --settings --layer base --dry-run
 ```
 
 ---

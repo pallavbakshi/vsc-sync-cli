@@ -83,7 +83,7 @@ class ApplyCommand:
                 )
 
             # Step 5: Show what will be applied
-            self._show_merge_summary(merge_result, stacks if not custom_layers else [])
+            self._show_merge_summary(merge_result, stacks if not custom_layers else [], custom_layers)
 
             if dry_run:
                 # Step 6a: Dry run - show differences
@@ -227,23 +227,69 @@ class ApplyCommand:
         else:
             console.print("[green]✓[/green] No managed config files to clean")
 
-    def _show_merge_summary(self, merge_result: MergeResult, stacks: List[str]) -> None:
+    def _show_merge_summary(self, merge_result: MergeResult, stacks: List[str], custom_layers: Optional[List[tuple[int, Path]]] = None) -> None:
         """Show a summary of what layers were merged."""
-        console.print("\n[bold]Configuration layers applied:[/bold]")
+        if custom_layers:
+            # Show custom layer stacking with clear ordering
+            console.print("\n[bold]Custom Layer Stack (stacked in order):[/bold]")
+            console.print("[dim]Note: Later layers take precedence over earlier ones (VSCode's behavior)[/dim]\n")
+            
+            table = Table()
+            table.add_column("Order", style="magenta", width=5)
+            table.add_column("Layer Name", style="green")
+            table.add_column("Path", style="dim")
+            table.add_column("Status", style="cyan")
 
-        table = Table()
-        table.add_column("Layer Type", style="cyan")
-        table.add_column("Layer Name", style="green")
-        table.add_column("Path", style="dim")
+            for i, (order, path) in enumerate(custom_layers):
+                if i == 0:
+                    order_desc = "Base"
+                    stack_symbol = "🏗️"
+                else:
+                    order_desc = f"#{i}"
+                    stack_symbol = "📚" if i < len(custom_layers) - 1 else "👑"
+                
+                # Try to extract layer name from path
+                if path.is_file():
+                    layer_name = path.stem
+                else:
+                    layer_name = path.name
+                
+                status = "✓" if path.exists() else "⚠️"
+                
+                table.add_row(
+                    f"{stack_symbol} {order_desc}",
+                    layer_name,
+                    str(path),
+                    status
+                )
 
-        for layer in merge_result.layers_applied:
-            layer_name = layer.layer_name or "base"
-            table.add_row(layer.layer_type, layer_name, str(layer.path))
+            console.print(table)
+            
+            # Show merge precedence explanation
+            console.print(f"\n[bold yellow]Layer Precedence:[/bold yellow]")
+            console.print("• Settings: Later layers override earlier layers")
+            console.print("• Keybindings: All layers merged together (base first, then stacked)")
+            console.print("• Extensions: All layers combined and deduplicated")
+            console.print("• Snippets: All layers copied (later layers can override same filenames)")
+        
+        else:
+            # Show standard layer system 
+            console.print("\n[bold]Configuration layers applied:[/bold]")
 
-        console.print(table)
+            table = Table()
+            table.add_column("Layer Type", style="cyan")
+            table.add_column("Layer Name", style="green")
+            table.add_column("Path", style="dim")
 
-        if stacks:
-            console.print(f"[bold]Stacks:[/bold] {', '.join(stacks)}")
+            for layer in merge_result.layers_applied:
+                layer_name = layer.layer_name or "base"
+                table.add_row(layer.layer_type, layer_name, str(layer.path))
+
+            console.print(table)
+
+            if stacks:
+                console.print(f"[bold]Stacks:[/bold] {', '.join(stacks)}")
+                console.print("[dim]Note: Last stack takes precedence in conflicts[/dim]")
 
     def _show_dry_run_results(
         self,

@@ -10,15 +10,15 @@ The custom layer system is vsc-sync's most powerful feature, allowing you to exp
 
 ### Understanding Layers
 
-Layers are applied in order from `--layer0` (base) to `--layer4` (most specific):
+Layers are applied in order, with the first `--layer` being the base and subsequent layers stacking on top:
 
 ```bash
 vsc-sync apply vscode --settings \
-  --layer0 base \        # Foundation settings
-  --layer1 python \      # Python-specific settings  
-  --layer2 vscode \      # VSCode-specific settings
-  --layer3 work \        # Work environment settings
-  --layer4 personal      # Personal preference overrides
+  --layer base \        # Foundation settings (applied first)
+  --layer python \      # Python-specific settings  
+  --layer vscode \      # VSCode-specific settings
+  --layer work \        # Work environment settings
+  --layer personal      # Personal preference overrides (applied last, takes precedence)
 ```
 
 ### Layer Sources
@@ -35,18 +35,18 @@ vsc-sync automatically searches your vscode-configs directory:
 
 ```
 ~/vscode-configs/
-├── base/                   # --layer0 base
+├── base/                   # --layer base
 ├── apps/
-│   ├── vscode/            # --layer1 vscode
-│   ├── cursor/            # --layer1 cursor
-│   └── windsurf/          # --layer1 windsurf
+│   ├── vscode/            # --layer vscode
+│   ├── cursor/            # --layer cursor
+│   └── windsurf/          # --layer windsurf
 ├── stacks/
-│   ├── python/            # --layer1 python
-│   ├── web/               # --layer1 web
-│   └── typescript/        # --layer1 typescript
+│   ├── python/            # --layer python
+│   ├── web/               # --layer web
+│   └── typescript/        # --layer typescript
 └── projects/
-    ├── my-app/            # --layer1 my-app
-    └── api-server/        # --layer1 api-server
+    ├── my-app/            # --layer my-app
+    └── api-server/        # --layer api-server
 ```
 
 Search order for name resolution:
@@ -79,9 +79,9 @@ description = "Project X specific settings"
 Usage:
 ```bash
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 work \        # Resolves to /company/shared/vscode-config
-  --layer2 personal      # Resolves to ~/my-personal-configs/vscode.json
+  --layer base \
+  --layer work \        # Resolves to /company/shared/vscode-config
+  --layer personal      # Resolves to ~/my-personal-configs/vscode.json
 ```
 
 #### Literal Paths
@@ -90,9 +90,9 @@ Specify exact file or directory paths:
 
 ```bash
 vsc-sync apply vscode --settings \
-  --layer0 ~/vscode-configs/base \
-  --layer1 /shared/team-settings \
-  --layer2 ./project-specific-config.json
+  --layer ~/vscode-configs/base \
+  --layer /shared/team-settings \
+  --layer ./project-specific-config.json
 ```
 
 ### Advanced Layer Examples
@@ -101,46 +101,46 @@ vsc-sync apply vscode --settings \
 ```bash
 # Python data science setup
 vsc-sync apply vscode --all \
-  --layer0 base \
-  --layer1 python \
-  --layer2 data-science \
-  --layer3 jupyter
+  --layer base \
+  --layer python \
+  --layer data-science \
+  --layer jupyter
 
 # Full-stack web development
 vsc-sync apply cursor --all \
-  --layer0 base \
-  --layer1 javascript \
-  --layer2 react \
-  --layer3 nodejs \
-  --layer4 personal
+  --layer base \
+  --layer javascript \
+  --layer react \
+  --layer nodejs \
+  --layer personal
 ```
 
 #### Project-Specific Configurations
 ```bash
 # Client project with specific requirements
 vsc-sync apply vscode --config \
-  --layer0 base \
-  --layer1 company-standard \
-  --layer2 client-project \
-  --layer3 ~/projects/client-app/.vscode-overrides
+  --layer base \
+  --layer company-standard \
+  --layer client-project \
+  --layer ~/projects/client-app/.vscode-overrides
 
 # Open source project
 vsc-sync apply windsurf --all \
-  --layer0 base \
-  --layer1 open-source \
-  --layer2 typescript \
-  --layer3 personal
+  --layer base \
+  --layer open-source \
+  --layer typescript \
+  --layer personal
 ```
 
 #### Multi-Language Development
 ```bash
 # Polyglot developer setup
 vsc-sync apply vscode --settings \
-  --layer0 base \
-  --layer1 python \
-  --layer1 javascript \  # Multiple layers of same level
-  --layer2 rust \
-  --layer3 personal
+  --layer base \
+  --layer python \
+  --layer javascript \  # Multiple layers of same level
+  --layer rust \
+  --layer personal
 ```
 
 ---
@@ -423,15 +423,15 @@ Apply different components with different layer combinations:
 ```bash
 # Apply settings and keybindings with full stack
 vsc-sync apply vscode --settings --keybindings \
-  --layer0 base --layer1 python --layer2 personal
+  --layer base --layer python --layer personal
 
 # Apply only extensions with minimal layers
 vsc-sync apply vscode --extensions \
-  --layer0 base --layer1 python
+  --layer base --layer python
 
 # Apply snippets from specific project
 vsc-sync apply vscode --snippets \
-  --layer0 base --layer1 my-project
+  --layer base --layer my-project
 ```
 
 ### Extension Management Strategies
@@ -439,10 +439,10 @@ vsc-sync apply vscode --snippets \
 #### Incremental Extension Management
 ```bash
 # Default: Only install missing extensions
-vsc-sync apply vscode --extensions --layer0 base --layer1 python
+vsc-sync apply vscode --extensions --layer base --layer python
 
 # Add project-specific extensions
-vsc-sync apply vscode --extensions --layer0 base --layer1 current-project
+vsc-sync apply vscode --extensions --layer base --layer current-project
 ```
 
 #### Curated Extension Management
@@ -488,7 +488,7 @@ vsc-sync apply vscode --config --preset python-dev
 
 # Add project-specific settings
 vsc-sync apply vscode --settings \
-  --layer0 base --layer1 python --layer2 current-project
+  --layer base --layer python --layer current-project
 
 # Evening: Switch to personal projects
 vsc-sync apply vscode --all --preset personal-dev
@@ -498,15 +498,15 @@ vsc-sync apply vscode --all --preset personal-dev
 ```bash
 # Set up project A
 vsc-sync apply vscode --all \
-  --layer0 base --layer1 web --layer2 project-a
+  --layer base --layer web --layer project-a
 
 # Quick switch to project B (same base, different project)
 vsc-sync apply vscode --settings --tasks \
-  --layer0 base --layer1 web --layer2 project-b
+  --layer base --layer web --layer project-b
 
 # Debugging project C with enhanced tools
 vsc-sync apply vscode --all \
-  --layer0 base --layer1 debugging --layer2 project-c
+  --layer base --layer debugging --layer project-c
 ```
 
 ### Team Collaboration Workflows
@@ -519,7 +519,7 @@ git pull origin main
 
 # Apply team standard with personal overrides
 vsc-sync apply vscode --all \
-  --layer0 base --layer1 team-standard --layer2 personal
+  --layer base --layer team-standard --layer personal
 
 # Push personal improvements back to shared layers
 vsc-sync pull vscode --to stack team-improvements \
@@ -591,7 +591,7 @@ vsc-sync config --show
 ls -la $(vsc-sync config --show | grep vscode_configs_path | cut -d'"' -f2)
 
 # Test specific layer resolution
-vsc-sync apply vscode --settings --layer0 python --dry-run
+vsc-sync apply vscode --settings --layer python --dry-run
 ```
 
 ### Extension Installation Debugging

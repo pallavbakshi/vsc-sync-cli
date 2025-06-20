@@ -200,20 +200,8 @@ def apply(
     ),
 
     # Custom layer flags
-    layer0: Optional[str] = typer.Option(
-        None, "--layer0", help="Base layer path (file or directory) or alias",
-    ),
-    layer1: Optional[str] = typer.Option(
-        None, "--layer1", help="Second layer path (file or directory) or alias",
-    ),
-    layer2: Optional[str] = typer.Option(
-        None, "--layer2", help="Third layer path (file or directory) or alias",
-    ),
-    layer3: Optional[str] = typer.Option(
-        None, "--layer3", help="Fourth layer path (file or directory) or alias",
-    ),
-    layer4: Optional[str] = typer.Option(
-        None, "--layer4", help="Fifth layer path (file or directory) or alias",
+    layer: Optional[List[str]] = typer.Option(
+        None, "--layer", help="Layer path (file or directory) or alias. Can be used multiple times. First layer is base, subsequent layers stack on top. Later layers take precedence.",
     ),
     
     # Layer preset flag
@@ -266,7 +254,7 @@ def apply(
         
         # Handle layer preset first
         if preset:
-            if any([layer0, layer1, layer2, layer3, layer4]):
+            if layer:
                 console.print(
                     "[red]Error:[/red] Cannot use --preset with --layer flags. Use either --preset or individual --layer flags.",
                 )
@@ -286,11 +274,10 @@ def apply(
             
             custom_layers = [(i, path) for i, path in enumerate(preset_paths)]
         else:
-            # Collect custom layers from individual flags
+            # Collect custom layers from --layer flags
             custom_layers = []
-            layer_args = [layer0, layer1, layer2, layer3, layer4]
-            for i, layer_spec in enumerate(layer_args):
-                if layer_spec is not None:
+            if layer:
+                for i, layer_spec in enumerate(layer):
                     # Use intelligent resolution: name -> alias -> path
                     resolved_path = toml_config_manager.resolve_layer_spec(layer_spec)
                     if resolved_path is not None:
@@ -303,7 +290,7 @@ def apply(
         # Validate custom layers vs stack flags
         if custom_layers and stack:
             console.print(
-                "[red]Error:[/red] Cannot use --layer/--preset flags with --stack flags. Use either standard layers (--stack) or custom layers (--layer0, --layer1, etc. or --preset).",
+                "[red]Error:[/red] Cannot use --layer/--preset flags with --stack flags. Use either standard layers (--stack) or custom layers (--layer or --preset).",
             )
             raise typer.Exit(1)
 
