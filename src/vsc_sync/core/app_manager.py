@@ -2,11 +2,12 @@
 
 import logging
 import platform
+import re
 import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from ..exceptions import AppConfigPathError, ExtensionError
+from ..exceptions import ExtensionError
 from ..models import AppDetails
 
 logger = logging.getLogger(__name__)
@@ -42,25 +43,25 @@ class AppManager:
                 "vscode": {
                     "config": base_path / "Code" / "User",
                     "executable": Path(
-                        "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+                        "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code",
                     ),
                 },
                 "vscodium": {
                     "config": base_path / "VSCodium" / "User",
                     "executable": Path(
-                        "/Applications/VSCodium.app/Contents/Resources/app/bin/codium"
+                        "/Applications/VSCodium.app/Contents/Resources/app/bin/codium",
                     ),
                 },
                 "cursor": {
                     "config": base_path / "Cursor" / "User",
                     "executable": Path(
-                        "/Applications/Cursor.app/Contents/Resources/app/bin/cursor"
+                        "/Applications/Cursor.app/Contents/Resources/app/bin/cursor",
                     ),
                 },
                 "windsurf": {
                     "config": base_path / "Windsurf" / "User",
                     "executable": Path(
-                        "/Applications/Windsurf.app/Contents/Resources/app/bin/windsurf"
+                        "/Applications/Windsurf.app/Contents/Resources/app/bin/windsurf",
                     ),
                 },
                 "void": {
@@ -70,18 +71,18 @@ class AppManager:
                 "pearai": {
                     "config": base_path / "PearAI" / "User",
                     "executable": Path(
-                        "/Applications/PearAI.app/Contents/Resources/app/bin/pearai"
+                        "/Applications/PearAI.app/Contents/Resources/app/bin/pearai",
                     ),
                 },
             }
 
-        elif system == "Windows":
+        if system == "Windows":
             app_data = home / "AppData" / "Roaming"
             return {
                 "vscode": {
                     "config": app_data / "Code" / "User",
                     "executable": Path(
-                        "C:/Program Files/Microsoft VS Code/bin/code.cmd"
+                        "C:/Program Files/Microsoft VS Code/bin/code.cmd",
                     ),
                 },
                 "vscodium": {
@@ -94,22 +95,22 @@ class AppManager:
                 },
             }
 
-        else:  # Linux
-            config_base = home / ".config"
-            return {
-                "vscode": {
-                    "config": config_base / "Code" / "User",
-                    "executable": Path("/usr/bin/code"),
-                },
-                "vscodium": {
-                    "config": config_base / "VSCodium" / "User",
-                    "executable": Path("/usr/bin/codium"),
-                },
-                "cursor": {
-                    "config": config_base / "Cursor" / "User",
-                    "executable": Path("/usr/bin/cursor"),
-                },
-            }
+        # Linux
+        config_base = home / ".config"
+        return {
+            "vscode": {
+                "config": config_base / "Code" / "User",
+                "executable": Path("/usr/bin/code"),
+            },
+            "vscodium": {
+                "config": config_base / "VSCodium" / "User",
+                "executable": Path("/usr/bin/codium"),
+            },
+            "cursor": {
+                "config": config_base / "Cursor" / "User",
+                "executable": Path("/usr/bin/cursor"),
+            },
+        }
 
     @staticmethod
     def auto_discover_apps() -> Dict[str, AppDetails]:
@@ -146,7 +147,7 @@ class AppManager:
                         pass
 
                 discovered_apps[app_alias] = AppDetails(
-                    alias=app_alias, config_path=config_path, executable_path=exec_path
+                    alias=app_alias, config_path=config_path, executable_path=exec_path,
                 )
 
                 logger.debug(f"Discovered app '{app_alias}' at {config_path}")
@@ -185,7 +186,7 @@ class AppManager:
         """Get list of installed extensions for an application."""
         if not app_details.executable_path:
             raise ExtensionError(
-                f"No executable path configured for {app_details.alias}"
+                f"No executable path configured for {app_details.alias}",
             )
 
         try:
@@ -207,50 +208,112 @@ class AppManager:
 
         except subprocess.TimeoutExpired:
             raise ExtensionError(
-                f"Timeout while listing extensions for {app_details.alias}"
+                f"Timeout while listing extensions for {app_details.alias}",
             )
         except subprocess.CalledProcessError as e:
             raise ExtensionError(
-                f"Failed to list extensions for {app_details.alias}: {e}"
+                f"Failed to list extensions for {app_details.alias}: {e}",
             )
         except Exception as e:
             raise ExtensionError(
-                f"Unexpected error listing extensions for {app_details.alias}: {e}"
+                f"Unexpected error listing extensions for {app_details.alias}: {e}",
             )
+
+    @staticmethod
+    def find_local_vsix(extension_id: str) -> Optional[Path]:
+        """Find a local VSIX file for the given extension ID.
+        
+        Looks in ~/Documents/vscode-extension for VSIX files matching the extension ID.
+        Extension IDs are in the format 'publisher.extension-name'.
+        VSIX files can be named:
+        - publisher.extension-name.vsix
+        - publisher.extension-name-version.vsix
+        """
+        return AppManager._find_local_vsix(extension_id)
+
+    @staticmethod
+    def _find_local_vsix(extension_id: str) -> Optional[Path]:
+        """Find a local VSIX file for the given extension ID.
+        
+        Looks in ~/Documents/vscode-extension for VSIX files matching the extension ID.
+        Extension IDs are in the format 'publisher.extension-name'.
+        VSIX files can be named:
+        - publisher.extension-name.vsix
+        - publisher.extension-name-version.vsix
+        """
+        local_extensions_dir = Path.home() / "Documents" / "vscode-extension"
+
+        if not local_extensions_dir.exists():
+            return None
+
+        # Escape dots and special characters for regex
+        escaped_id = re.escape(extension_id)
+
+        # Pattern matches:
+        # - exact: publisher.extension.vsix
+        # - with version: publisher.extension-1.2.3.vsix
+        pattern = re.compile(f"^{escaped_id}(-[0-9.]+)?\\.vsix$", re.IGNORECASE)
+
+        try:
+            for vsix_file in local_extensions_dir.glob("*.vsix"):
+                if pattern.match(vsix_file.name):
+                    logger.debug(f"Found local VSIX match: {vsix_file}")
+                    return vsix_file
+        except Exception as e:
+            logger.warning(f"Error searching local VSIX files: {e}")
+
+        return None
 
     @staticmethod
     def install_extension(app_details: AppDetails, extension_id: str) -> bool:
         """Install an extension for an application."""
         if not app_details.executable_path:
             raise ExtensionError(
-                f"No executable path configured for {app_details.alias}"
+                f"No executable path configured for {app_details.alias}",
             )
+
+        # Check for local VSIX file first
+        local_vsix = AppManager._find_local_vsix(extension_id)
 
         try:
-            result = subprocess.run(
-                [str(app_details.executable_path), "--install-extension", extension_id],
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=120,
-            )
+            if local_vsix:
+                # Install from local VSIX file
+                logger.info(f"Found local VSIX for {extension_id}: {local_vsix}")
+                result = subprocess.run(
+                    [str(app_details.executable_path), "--install-extension", str(local_vsix)],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=30,
+                )
+                logger.debug(f"Installed extension {extension_id} from local VSIX for {app_details.alias}")
+            else:
+                # Install from marketplace
+                logger.info(f"Installing {extension_id} from marketplace")
+                result = subprocess.run(
+                    [str(app_details.executable_path), "--install-extension", extension_id],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=10,
+                )
+                logger.debug(f"Installed extension {extension_id} from marketplace for {app_details.alias}")
 
-            logger.debug(f"Installed extension {extension_id} for {app_details.alias}")
             return True
 
         except subprocess.TimeoutExpired:
             logger.error(
-                f"Timeout while installing extension {extension_id} for {app_details.alias}"
+                f"Timeout while installing extension {extension_id} for {app_details.alias}",
             )
             return False
         except subprocess.CalledProcessError as e:
             logger.error(
-                f"Failed to install extension {extension_id} for {app_details.alias}: {e}"
+                f"Failed to install extension {extension_id} for {app_details.alias}: {e}",
             )
             return False
         except Exception as e:
             logger.error(
-                f"Unexpected error installing extension {extension_id} for {app_details.alias}: {e}"
+                f"Unexpected error installing extension {extension_id} for {app_details.alias}: {e}",
             )
             return False
 
@@ -259,7 +322,7 @@ class AppManager:
         """Uninstall an extension for an application."""
         if not app_details.executable_path:
             raise ExtensionError(
-                f"No executable path configured for {app_details.alias}"
+                f"No executable path configured for {app_details.alias}",
             )
 
         try:
@@ -276,22 +339,22 @@ class AppManager:
             )
 
             logger.debug(
-                f"Uninstalled extension {extension_id} for {app_details.alias}"
+                f"Uninstalled extension {extension_id} for {app_details.alias}",
             )
             return True
 
         except subprocess.TimeoutExpired:
             logger.error(
-                f"Timeout while uninstalling extension {extension_id} for {app_details.alias}"
+                f"Timeout while uninstalling extension {extension_id} for {app_details.alias}",
             )
             return False
         except subprocess.CalledProcessError as e:
             logger.error(
-                f"Failed to uninstall extension {extension_id} for {app_details.alias}: {e}"
+                f"Failed to uninstall extension {extension_id} for {app_details.alias}: {e}",
             )
             return False
         except Exception as e:
             logger.error(
-                f"Unexpected error uninstalling extension {extension_id} for {app_details.alias}: {e}"
+                f"Unexpected error uninstalling extension {extension_id} for {app_details.alias}: {e}",
             )
             return False

@@ -5,14 +5,12 @@ import logging
 import shutil
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.text import Text
 
 from ..config import ConfigManager
 from ..core.app_manager import AppManager
@@ -42,6 +40,7 @@ class ApplyCommand:
         dry_run: bool = False,
         force: bool = False,
         prune_extensions: bool = False,
+        clean_extensions: bool = False,
         tasks: bool = True,
         include_settings: bool = True,
         include_keybindings: bool = True,
@@ -51,7 +50,7 @@ class ApplyCommand:
         """Execute the apply command."""
         try:
             console.print(
-                f"[bold blue]Applying configuration to {app_alias}...[/bold blue]"
+                f"[bold blue]Applying configuration to {app_alias}...[/bold blue]",
             )
 
             # Step 1: Validate app and get details
@@ -74,7 +73,7 @@ class ApplyCommand:
             # Step 4: Merge configuration layers
             stacks = stacks or []
             merge_result = self.layer_manager.merge_layers(
-                app_alias=app_alias, stacks=stacks
+                app_alias=app_alias, stacks=stacks,
             )
 
             # Step 5: Show what will be applied
@@ -86,6 +85,7 @@ class ApplyCommand:
                     app_details,
                     merge_result,
                     prune_extensions,
+                    clean_extensions,
                     tasks,
                     include_settings,
                     include_keybindings,
@@ -104,13 +104,6 @@ class ApplyCommand:
                 ):
                     console.print("[yellow]Apply cancelled by user.[/yellow]")
                     return
-
-                # Ask about extension cleaning
-                clean_extensions = False
-                if include_extensions:
-                    clean_extensions = self._prompt_extension_cleaning(
-                        app_details, merge_result
-                    )
 
                 self._apply_configurations(
                     app_details,
@@ -143,20 +136,20 @@ class ApplyCommand:
             available_apps = list(self.config.managed_apps.keys())
             raise VscSyncError(
                 f"App '{app_alias}' is not registered. "
-                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}"
+                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}",
             )
 
         app_details = self.config.managed_apps[app_alias]
 
         if not app_details.config_path.exists():
             raise AppConfigPathError(
-                f"App config directory does not exist: {app_details.config_path}"
+                f"App config directory does not exist: {app_details.config_path}",
             )
 
         return app_details
 
     def _create_backup(
-        self, app_details: AppDetails, backup_suffix: Optional[str]
+        self, app_details: AppDetails, backup_suffix: Optional[str],
     ) -> Path:
         """Create a backup of the app's configuration directory."""
         if backup_suffix is None:
@@ -165,7 +158,7 @@ class ApplyCommand:
 
         console.print(f"Creating backup with suffix: {backup_suffix}")
         backup_path = FileOperations.backup_directory(
-            app_details.config_path, backup_suffix
+            app_details.config_path, backup_suffix,
         )
         console.print(f"[green]Backup created:[/green] {backup_path}")
         return backup_path
@@ -183,15 +176,15 @@ class ApplyCommand:
             # Create the directory if it doesn't exist
             app_details.config_path.mkdir(parents=True, exist_ok=True)
             console.print(
-                f"[green]✓[/green] Created user directory: {app_details.config_path}"
+                f"[green]✓[/green] Created user directory: {app_details.config_path}",
             )
             return
 
         console.print(
-            f"[yellow]Cleaning managed config files in:[/yellow] {app_details.config_path}"
+            f"[yellow]Cleaning managed config files in:[/yellow] {app_details.config_path}",
         )
 
-        managed_files: list[str] = []
+        managed_files: List[str] = []
         if include_settings:
             managed_files.append("settings.json")
         if include_keybindings:
@@ -223,10 +216,10 @@ class ApplyCommand:
 
         if cleaned_count > 0:
             console.print(
-                f"[green]✓[/green] Cleaned {cleaned_count} managed config items"
+                f"[green]✓[/green] Cleaned {cleaned_count} managed config items",
             )
         else:
-            console.print(f"[green]✓[/green] No managed config files to clean")
+            console.print("[green]✓[/green] No managed config files to clean")
 
     def _show_merge_summary(self, merge_result: MergeResult, stacks: List[str]) -> None:
         """Show a summary of what layers were merged."""
@@ -251,6 +244,7 @@ class ApplyCommand:
         app_details: AppDetails,
         merge_result: MergeResult,
         prune_extensions: bool,
+        clean_extensions: bool,
         tasks_enabled: bool,
         include_settings: bool = True,
         include_keybindings: bool = True,
@@ -275,11 +269,11 @@ class ApplyCommand:
         # Show extension changes
         if include_extensions:
             self._show_extensions_diff(
-                app_details, merge_result.extensions, prune_extensions
+                app_details, merge_result.extensions, prune_extensions, clean_extensions,
             )
 
     def _show_settings_diff(
-        self, app_details: AppDetails, merged_settings: Dict
+        self, app_details: AppDetails, merged_settings: Dict,
     ) -> None:
         """Show differences in settings.json."""
         console.print("\n[bold]Settings.json changes:[/bold]")
@@ -296,7 +290,7 @@ class ApplyCommand:
             console.print("[dim]Current settings:[/dim]")
             current_json = json.dumps(current_settings, indent=2, sort_keys=True)
             console.print(
-                Syntax(current_json, "json", line_numbers=False, theme="monokai")
+                Syntax(current_json, "json", line_numbers=False, theme="monokai"),
             )
 
         console.print("[dim]New settings:[/dim]")
@@ -309,9 +303,9 @@ class ApplyCommand:
     def _show_setting_changes(self, current: Dict, new: Dict) -> None:
         """Show detailed setting changes."""
 
-        def flatten_dict(d: Dict, prefix: str = "") -> Dict[str, any]:
+        def flatten_dict(d: Dict, prefix: str = "") -> Dict[str, Any]:
             """Flatten nested dictionary for comparison."""
-            items = []
+            items: List[tuple[str, Any]] = []
             for k, v in d.items():
                 new_key = f"{prefix}.{k}" if prefix else k
                 if isinstance(v, dict):
@@ -347,7 +341,7 @@ class ApplyCommand:
                 console.print(f"  - {key}: {current_flat[key]}")
 
     def _show_keybindings_diff(
-        self, app_details: AppDetails, keybindings_source: Optional[Path]
+        self, app_details: AppDetails, keybindings_source: Optional[Path],
     ) -> None:
         """Show keybindings.json changes."""
         console.print("\n[bold]Keybindings.json changes:[/bold]")
@@ -363,18 +357,17 @@ class ApplyCommand:
                     console.print("[green]No changes needed[/green]")
                 else:
                     console.print(
-                        f"[yellow]Will replace with:[/yellow] {keybindings_source}"
+                        f"[yellow]Will replace with:[/yellow] {keybindings_source}",
                     )
             else:
                 console.print(f"[green]Will create from:[/green] {keybindings_source}")
+        elif current_keybindings_file.exists():
+            console.print("[dim]Will keep existing keybindings.json[/dim]")
         else:
-            if current_keybindings_file.exists():
-                console.print("[dim]Will keep existing keybindings.json[/dim]")
-            else:
-                console.print("[dim]No keybindings.json to apply[/dim]")
+            console.print("[dim]No keybindings.json to apply[/dim]")
 
     def _show_tasks_diff(
-        self, app_details: AppDetails, tasks_source: Optional[Path]
+        self, app_details: AppDetails, tasks_source: Optional[Path],
     ) -> None:
         """Show tasks.json changes during dry run."""
         console.print("\n[bold]Tasks.json changes:[/bold]")
@@ -392,14 +385,13 @@ class ApplyCommand:
                     console.print(f"[yellow]Will replace with:[/yellow] {tasks_source}")
             else:
                 console.print(f"[green]Will create from:[/green] {tasks_source}")
+        elif current_tasks_file.exists():
+            console.print("[dim]Will keep existing tasks.json[/dim]")
         else:
-            if current_tasks_file.exists():
-                console.print("[dim]Will keep existing tasks.json[/dim]")
-            else:
-                console.print("[dim]No tasks.json to apply[/dim]")
+            console.print("[dim]No tasks.json to apply[/dim]")
 
     def _show_snippets_diff(
-        self, app_details: AppDetails, snippets_paths: List[Path]
+        self, app_details: AppDetails, snippets_paths: List[Path],
     ) -> None:
         """Show snippets changes."""
         console.print("\n[bold]Snippets changes:[/bold]")
@@ -419,11 +411,11 @@ class ApplyCommand:
                     target_file = app_snippets_dir / snippet_file.name
                     if target_file.exists():
                         console.print(
-                            f"  [yellow]Will overwrite:[/yellow] {snippet_file.name}"
+                            f"  [yellow]Will overwrite:[/yellow] {snippet_file.name}",
                         )
                     else:
                         console.print(
-                            f"  [green]Will create:[/green] {snippet_file.name}"
+                            f"  [green]Will create:[/green] {snippet_file.name}",
                         )
 
     def _show_extensions_diff(
@@ -431,9 +423,24 @@ class ApplyCommand:
         app_details: AppDetails,
         target_extensions: List[str],
         prune_extensions: bool,
+        clean_extensions: bool = False,
     ) -> None:
         """Show extension changes."""
         console.print("\n[bold]Extensions changes:[/bold]")
+
+        # Show mode information
+        if clean_extensions:
+            console.print(
+                "[yellow]Mode: Replace All[/yellow] - Will remove ALL extensions and install only configured ones",
+            )
+        elif prune_extensions:
+            console.print(
+                "[yellow]Mode: Remove Extra[/yellow] - Will remove extensions not in configuration",
+            )
+        else:
+            console.print(
+                "[yellow]Mode: Add Missing[/yellow] - Will only add missing extensions",
+            )
 
         if not target_extensions:
             console.print("[dim]No extensions to manage[/dim]")
@@ -443,23 +450,33 @@ class ApplyCommand:
             current_extensions = set(AppManager.get_installed_extensions(app_details))
         except ExtensionError as e:
             console.print(f"[red]Cannot check current extensions:[/red] {e}")
-            console.print(f"[yellow]Would install these extensions:[/yellow]")
+            console.print("[yellow]Would install these extensions:[/yellow]")
             for ext in target_extensions:
                 console.print(f"  + {ext}")
             return
 
         target_extensions_set = set(target_extensions)
 
-        to_install = target_extensions_set - current_extensions
-        to_uninstall = (
-            current_extensions - target_extensions_set if prune_extensions else set()
-        )
-        already_installed = target_extensions_set & current_extensions
+        if clean_extensions:
+            # In replace-all mode, everything gets reinstalled
+            to_install = target_extensions_set
+            to_uninstall = current_extensions
+            already_installed = set()
+        else:
+            to_install = target_extensions_set - current_extensions
+            to_uninstall = (
+                current_extensions - target_extensions_set if prune_extensions else set()
+            )
+            already_installed = target_extensions_set & current_extensions
 
         if to_install:
             console.print(f"[green]Extensions to install ({len(to_install)}):[/green]")
             for ext in sorted(to_install):
-                console.print(f"  + {ext}")
+                local_vsix = AppManager.find_local_vsix(ext)
+                if local_vsix:
+                    console.print(f"  + {ext} (from local VSIX: {local_vsix.name})")
+                else:
+                    console.print(f"  + {ext} (from marketplace)")
 
         if to_uninstall:
             console.print(f"[red]Extensions to uninstall ({len(to_uninstall)}):[/red]")
@@ -486,11 +503,11 @@ class ApplyCommand:
     ) -> bool:
         """Ask user to confirm applying changes."""
         console.print(
-            f"\n[bold]Ready to apply configuration to {app_details.alias}[/bold]"
+            f"\n[bold]Ready to apply configuration to {app_details.alias}[/bold]",
         )
         console.print(f"Target directory: [cyan]{app_details.config_path}[/cyan]")
 
-        changes_summary: list[str] = []
+        changes_summary: List[str] = []
         if include_settings and merge_result.merged_settings:
             changes_summary.append("settings.json")
         if include_keybindings and merge_result.keybindings_source:
@@ -506,7 +523,7 @@ class ApplyCommand:
         return Confirm.ask("Proceed with applying configuration?", default=True)
 
     def _prompt_extension_cleaning(
-        self, app_details: AppDetails, merge_result: MergeResult
+        self, app_details: AppDetails, merge_result: MergeResult,
     ) -> bool:
         """Ask user if they want to clean extensions for a fresh start."""
         if not merge_result.extensions:
@@ -518,13 +535,13 @@ class ApplyCommand:
             return False  # No existing extensions to clean
 
         console.print(
-            f"\n[bold yellow]Extension Directory Found:[/bold yellow] {extension_dir}"
+            f"\n[bold yellow]Extension Directory Found:[/bold yellow] {extension_dir}",
         )
         console.print(
-            "Do you want to clean all existing extensions and install only the ones from your config?"
+            "Do you want to clean all existing extensions and install only the ones from your config?",
         )
         console.print(
-            "[dim]This will remove all currently installed extensions and do a fresh install.[/dim]"
+            "[dim]This will remove all currently installed extensions and do a fresh install.[/dim]",
         )
 
         return Confirm.ask("Clean extensions directory?", default=False)
@@ -567,41 +584,41 @@ class ApplyCommand:
         # Apply extensions
         if include_extensions and merge_result.extensions:
             self._apply_extensions(
-                app_details, merge_result.extensions, prune_extensions, clean_extensions
+                app_details, merge_result.extensions, prune_extensions, clean_extensions,
             )
 
     def _apply_tasks(self, app_details: AppDetails, tasks_source: Path) -> None:
         """Apply tasks.json from source layer."""
         tasks_file = app_details.config_path / "tasks.json"
-        console.print(f"[cyan]Writing tasks.json...[/cyan]")
+        console.print("[cyan]Writing tasks.json...[/cyan]")
 
         FileOperations.copy_file(tasks_source, tasks_file)
-        console.print(f"[green]✓[/green] Tasks applied")
+        console.print("[green]✓[/green] Tasks applied")
 
     def _apply_settings(self, app_details: AppDetails, merged_settings: Dict) -> None:
         """Apply merged settings.json."""
         settings_file = app_details.config_path / "settings.json"
-        console.print(f"[cyan]Writing settings.json...[/cyan]")
+        console.print("[cyan]Writing settings.json...[/cyan]")
 
         FileOperations.write_json_file(settings_file, merged_settings)
-        console.print(f"[green]✓[/green] Settings applied")
+        console.print("[green]✓[/green] Settings applied")
 
     def _apply_keybindings(
-        self, app_details: AppDetails, keybindings_source: Path
+        self, app_details: AppDetails, keybindings_source: Path,
     ) -> None:
         """Apply keybindings.json."""
         keybindings_file = app_details.config_path / "keybindings.json"
-        console.print(f"[cyan]Writing keybindings.json...[/cyan]")
+        console.print("[cyan]Writing keybindings.json...[/cyan]")
 
         FileOperations.copy_file(keybindings_source, keybindings_file)
-        console.print(f"[green]✓[/green] Keybindings applied")
+        console.print("[green]✓[/green] Keybindings applied")
 
     def _apply_snippets(
-        self, app_details: AppDetails, snippets_paths: List[Path]
+        self, app_details: AppDetails, snippets_paths: List[Path],
     ) -> None:
         """Apply snippets from all layers."""
         app_snippets_dir = app_details.config_path / "snippets"
-        console.print(f"[cyan]Copying snippets...[/cyan]")
+        console.print("[cyan]Copying snippets...[/cyan]")
 
         FileOperations.ensure_directory(app_snippets_dir)
 
@@ -609,7 +626,7 @@ class ApplyCommand:
         for snippets_path in snippets_paths:
             if snippets_path.is_dir():
                 FileOperations.copy_directory_contents(
-                    snippets_path, app_snippets_dir, overwrite_existing=True
+                    snippets_path, app_snippets_dir, overwrite_existing=True,
                 )
                 snippet_files = list(snippets_path.glob("*.code-snippets"))
                 snippets_applied += len(snippet_files)
@@ -622,17 +639,17 @@ class ApplyCommand:
 
         if not extension_dir.exists():
             console.print(
-                f"[dim]Extensions directory doesn't exist, skipping clean[/dim]"
+                "[dim]Extensions directory doesn't exist, skipping clean[/dim]",
             )
             return
 
         console.print(
-            f"[yellow]Cleaning extensions directory:[/yellow] {extension_dir}"
+            f"[yellow]Cleaning extensions directory:[/yellow] {extension_dir}",
         )
 
         try:
             shutil.rmtree(extension_dir)
-            console.print(f"[green]✓[/green] Extensions directory cleaned")
+            console.print("[green]✓[/green] Extensions directory cleaned")
         except Exception as e:
             console.print(f"[red]Failed to clean extensions directory:[/red] {e}")
 
@@ -644,11 +661,28 @@ class ApplyCommand:
         clean_extensions: bool = False,
     ) -> None:
         """Apply extension changes."""
-        console.print(f"[cyan]Managing extensions...[/cyan]")
+        console.print("[cyan]Managing extensions...[/cyan]")
+
+        # Show what extension management mode is being used
+        if clean_extensions:
+            console.print(
+                "[yellow]Mode: Replace All[/yellow] - This will remove ALL existing extensions "
+                "and install only those from your configuration.",
+            )
+        elif prune_extensions:
+            console.print(
+                "[yellow]Mode: Remove Extra[/yellow] - This will keep extensions from your configuration "
+                "and remove any that are not listed.",
+            )
+        else:
+            console.print(
+                "[yellow]Mode: Add Missing[/yellow] - This will only install missing extensions "
+                "and will NOT remove any existing extensions.",
+            )
 
         if not app_details.executable_path:
             console.print(
-                "[yellow]No executable path configured, skipping extensions[/yellow]"
+                "[yellow]No executable path configured, skipping extensions[/yellow]",
             )
             return
 
@@ -661,7 +695,7 @@ class ApplyCommand:
             else:
                 # Normal case: check what's currently installed
                 current_extensions = set(
-                    AppManager.get_installed_extensions(app_details)
+                    AppManager.get_installed_extensions(app_details),
                 )
                 target_extensions_set = set(target_extensions)
 
@@ -675,10 +709,17 @@ class ApplyCommand:
             # Install extensions
             installed_count = 0
             for extension in to_install:
-                console.print(f"Installing {extension}...")
+                # Check if we have a local VSIX file
+                local_vsix = AppManager.find_local_vsix(extension)
+                if local_vsix:
+                    console.print(f"Installing {extension} from local VSIX: {local_vsix.name}")
+                else:
+                    console.print(f"Installing {extension} from marketplace...")
+
                 if AppManager.install_extension(app_details, extension):
                     installed_count += 1
-                    console.print(f"[green]✓[/green] Installed {extension}")
+                    source = "local VSIX" if local_vsix else "marketplace"
+                    console.print(f"[green]✓[/green] Installed {extension} from {source}")
                 else:
                     console.print(f"[red]✗[/red] Failed to install {extension}")
 
@@ -694,10 +735,10 @@ class ApplyCommand:
 
             if installed_count > 0 or uninstalled_count > 0:
                 console.print(
-                    f"[green]✓[/green] Extensions: {installed_count} installed, {uninstalled_count} uninstalled"
+                    f"[green]✓[/green] Extensions: {installed_count} installed, {uninstalled_count} uninstalled",
                 )
             else:
-                console.print(f"[green]✓[/green] No extension changes needed")
+                console.print("[green]✓[/green] No extension changes needed")
 
         except ExtensionError as e:
             console.print(f"[red]Extension management failed:[/red] {e}")
@@ -714,10 +755,10 @@ class ApplyCommand:
     ) -> None:
         """Show success message after applying configurations."""
         console.print(
-            f"\n[bold green]✓ Configuration successfully applied to {app_details.alias}![/bold green]"
+            f"\n[bold green]✓ Configuration successfully applied to {app_details.alias}![/bold green]",
         )
 
-        applied_components: list[str] = []
+        applied_components: List[str] = []
         if include_settings and merge_result.merged_settings:
             applied_components.append("settings")
         if include_keybindings and merge_result.keybindings_source:
@@ -731,13 +772,13 @@ class ApplyCommand:
             console.print(f"Applied: {', '.join(applied_components)}")
 
         console.print(
-            f"Configuration directory: [cyan]{app_details.config_path}[/cyan]"
+            f"Configuration directory: [cyan]{app_details.config_path}[/cyan]",
         )
 
         # Suggest restart if needed
         console.print(
-            "\n[yellow]Note:[/yellow] Some changes may require restarting the application to take effect."
+            "\n[yellow]Note:[/yellow] Some changes may require restarting the application to take effect.",
         )
         console.print(
-            "Use [cyan]vsc-sync status[/cyan] to verify the configuration was applied correctly."
+            "Use [cyan]vsc-sync status[/cyan] to verify the configuration was applied correctly.",
         )

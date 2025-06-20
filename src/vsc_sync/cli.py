@@ -1,8 +1,7 @@
 """Main CLI application for vsc-sync."""
 
-import logging
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import typer
 from rich.console import Console
@@ -11,7 +10,6 @@ from rich.table import Table
 from . import __version__
 from .config import ConfigManager
 from .core.app_manager import AppManager
-from .core.config_manager import LayerConfigManager
 from .exceptions import VscSyncError
 from .utils import setup_logging
 
@@ -36,10 +34,10 @@ def version_callback(value: bool) -> None:
 @app.callback()
 def main(
     verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="Enable verbose output"
+        False, "--verbose", "-v", help="Enable verbose output",
     ),
     version: Optional[bool] = typer.Option(
-        None, "--version", callback=version_callback, help="Show version"
+        None, "--version", callback=version_callback, help="Show version",
     ),
 ) -> None:
     """vsc-sync: Synchronize VSCode-like configurations across multiple editors."""
@@ -49,10 +47,10 @@ def main(
 @app.command()
 def init(
     repo: Optional[str] = typer.Option(
-        None, "--repo", help="Git URL or local path to vscode-configs repository"
+        None, "--repo", help="Git URL or local path to vscode-configs repository",
     ),
     config_file: Optional[str] = typer.Option(
-        None, "--config-file", help="Path to store vsc-sync configuration"
+        None, "--config-file", help="Path to store vsc-sync configuration",
     ),
 ) -> None:
     """Initialize vsc-sync for first-time use."""
@@ -75,16 +73,16 @@ def init(
 def add_app(
     alias: str = typer.Argument(..., help="Unique alias for the application"),
     config_path: str = typer.Argument(
-        ..., help="Path to the app's user configuration directory"
+        ..., help="Path to the app's user configuration directory",
     ),
     executable: Optional[str] = typer.Option(
-        None, "--executable", help="Path to the app's executable"
+        None, "--executable", help="Path to the app's executable",
     ),
 ) -> None:
     """Register a new VSCode-like application."""
     try:
         # TODO: Implement add-app logic
-        console.print(f"[yellow]Add-app functionality coming soon![/yellow]")
+        console.print("[yellow]Add-app functionality coming soon![/yellow]")
         console.print(f"Will register app '{alias}' with config path: {config_path}")
         if executable:
             console.print(f"Executable: {executable}")
@@ -97,7 +95,7 @@ def add_app(
 @app.command()
 def list_apps(
     verbose: bool = typer.Option(
-        False, "--verbose", "-v", help="Show detailed information"
+        False, "--verbose", "-v", help="Show detailed information",
     ),
 ) -> None:
     """List all registered applications."""
@@ -106,7 +104,7 @@ def list_apps(
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
             )
             raise typer.Exit(1)
 
@@ -115,7 +113,7 @@ def list_apps(
         if not config.managed_apps:
             console.print("No applications registered yet.")
             console.print(
-                "Use 'vsc-sync add-app' to register applications or 'vsc-sync init' to auto-discover."
+                "Use 'vsc-sync add-app' to register applications or 'vsc-sync init' to auto-discover.",
             )
             return
 
@@ -151,8 +149,8 @@ def list_apps(
 @app.command()
 def apply(
     app_alias: str = typer.Argument(..., help="Alias of the target application"),
-    stack: Optional[list[str]] = typer.Option(
-        None, "--stack", help="Tech stack to apply (can be used multiple times)"
+    stack: Optional[List[str]] = typer.Option(
+        None, "--stack", help="Tech stack to apply (can be used multiple times)",
     ),
     backup: bool = typer.Option(
         True,
@@ -160,33 +158,46 @@ def apply(
         help="Create backup before applying (default: enabled)",
     ),
     backup_suffix: Optional[str] = typer.Option(
-        None, "--backup-suffix", help="Custom backup suffix"
+        None, "--backup-suffix", help="Custom backup suffix",
     ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", "-n", help="Show what would be done without applying"
+        False, "--dry-run", "-n", help="Show what would be done without applying",
     ),
     force: bool = typer.Option(
-        False, "--force", "-f", help="Force overwrite without prompting"
-    ),
-    prune_extensions: bool = typer.Option(
-        False, "--prune-extensions", help="Uninstall extensions not in configuration"
+        False, "--force", "-f", help="Force overwrite without prompting",
     ),
 
-    # Component selection flags
-    settings_flag: bool = typer.Option(
-        False, "--settings", help="Apply settings.json"
+    # Component selection flags (opt-in)
+    settings: bool = typer.Option(
+        False, "--settings", help="Apply settings.json",
     ),
-    keybindings_flag: bool = typer.Option(
-        False, "--keybindings", help="Apply keybindings.json"
+    keybindings: bool = typer.Option(
+        False, "--keybindings", help="Apply keybindings.json",
     ),
-    extensions_flag: bool = typer.Option(
-        False, "--extensions", help="Manage extensions"
+    extensions: bool = typer.Option(
+        False, "--extensions", help="Manage extensions",
     ),
-    snippets_flag: bool = typer.Option(
-        False, "--snippets", help="Copy snippets"
+    snippets: bool = typer.Option(
+        False, "--snippets", help="Copy snippets",
     ),
     tasks: bool = typer.Option(
-        True, "--tasks/--no-tasks", help="Sync tasks.json (default: yes)"
+        False, "--tasks", help="Apply tasks.json",
+    ),
+
+    # Convenience flags
+    all_components: bool = typer.Option(
+        False, "--all", help="Apply all components (settings, keybindings, extensions, snippets, tasks)",
+    ),
+    config_only: bool = typer.Option(
+        False, "--config", help="Apply config files only (settings, keybindings, tasks)",
+    ),
+
+    # Extension-specific flags
+    remove_extra: bool = typer.Option(
+        False, "--remove-extra", help="Remove extensions not in configuration (requires --extensions)",
+    ),
+    replace_all: bool = typer.Option(
+        False, "--replace-all", help="Remove ALL extensions and reinstall from scratch (requires --extensions)",
     ),
 ) -> None:
     """Apply configurations to an application."""
@@ -197,21 +208,58 @@ def apply(
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
+            )
+            raise typer.Exit(1)
+
+        # Validate flag combinations
+        if all_components and any([settings, keybindings, extensions, snippets, tasks, config_only]):
+            console.print(
+                "[red]Error:[/red] Cannot use --all with individual component flags",
+            )
+            raise typer.Exit(1)
+
+        if config_only and any([settings, keybindings, extensions, snippets, tasks, all_components]):
+            console.print(
+                "[red]Error:[/red] Cannot use --config with other component flags",
+            )
+            raise typer.Exit(1)
+
+        if (remove_extra or replace_all) and not extensions and not all_components:
+            console.print(
+                "[red]Error:[/red] --remove-extra and --replace-all require --extensions or --all",
+            )
+            raise typer.Exit(1)
+
+        # Determine which components to include
+        if all_components:
+            include_settings = True
+            include_keybindings = True
+            include_extensions = True
+            include_snippets = True
+            include_tasks = True
+        elif config_only:
+            include_settings = True
+            include_keybindings = True
+            include_extensions = False
+            include_snippets = False
+            include_tasks = True
+        else:
+            include_settings = settings
+            include_keybindings = keybindings
+            include_extensions = extensions
+            include_snippets = snippets
+            include_tasks = tasks
+
+        # Check if at least one component was specified
+        if not any([include_settings, include_keybindings, include_extensions, include_snippets, include_tasks]):
+            console.print(
+                "[red]Error:[/red] No components specified. Use --settings, --keybindings, --extensions, "
+                "--snippets, --tasks, --config, or --all",
             )
             raise typer.Exit(1)
 
         apply_command = ApplyCommand(config_manager)
-        # Determine components; if none specified => all True
-        specified = any(
-            [settings_flag, keybindings_flag, extensions_flag, snippets_flag]
-        )
-
-        include_settings = settings_flag or not specified
-        include_keybindings = keybindings_flag or not specified
-        include_extensions = extensions_flag or not specified
-        include_snippets = snippets_flag or not specified
-
         apply_command.run(
             app_alias=app_alias,
             stacks=stack,
@@ -219,8 +267,9 @@ def apply(
             backup_suffix=backup_suffix,
             dry_run=dry_run,
             force=force,
-            prune_extensions=prune_extensions,
-            tasks=tasks,
+            prune_extensions=remove_extra,
+            clean_extensions=replace_all,
+            tasks=include_tasks,
             include_settings=include_settings,
             include_keybindings=include_keybindings,
             include_extensions=include_extensions,
@@ -238,10 +287,10 @@ def apply(
 @app.command()
 def status(
     app_alias: Optional[str] = typer.Argument(
-        None, help="App alias to check (if not provided, checks all)"
+        None, help="App alias to check (if not provided, checks all)",
     ),
-    stack: Optional[list[str]] = typer.Option(
-        None, "--stack", help="Stacks to consider for comparison"
+    stack: Optional[List[str]] = typer.Option(
+        None, "--stack", help="Stacks to consider for comparison",
     ),
 ) -> None:
     """Show configuration status for applications."""
@@ -252,7 +301,7 @@ def status(
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
             )
             raise typer.Exit(1)
 
@@ -270,9 +319,9 @@ def status(
 @app.command()
 def setup_project(
     project_path: str = typer.Argument(
-        ".", help="Path to the project directory (defaults to current directory)"
+        ".", help="Path to the project directory (defaults to current directory)",
     ),
-    stack: Optional[list[str]] = typer.Option(
+    stack: Optional[List[str]] = typer.Option(
         None,
         "--stack",
         help="Tech stack(s) to use for project setup (can be used multiple times)",
@@ -292,13 +341,14 @@ def setup_project(
     """Set up .vscode/ configuration files for a project."""
     try:
         from pathlib import Path
+
         from .commands.setup_project_cmd import SetupProjectCommand
 
         config_manager = ConfigManager()
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
             )
             raise typer.Exit(1)
 
@@ -332,10 +382,10 @@ def pull(
         help="Alias of the source application (required unless --from-project is used)",
     ),
     layer_type: str = typer.Option(
-        ..., "--to", help="Target layer type: base, app, stack, project"
+        ..., "--to", help="Target layer type: base, app, stack, project",
     ),
     layer_name: Optional[str] = typer.Argument(
-        None, help="Layer name (required for stack, optional for app/project)"
+        None, help="Layer name (required for stack, optional for app/project)",
     ),
     from_project: Optional[str] = typer.Option(
         None,
@@ -348,13 +398,13 @@ def pull(
         help="Include settings.json (default: yes)",
     ),
     keybindings: bool = typer.Option(
-        False, "--keybindings", help="Include keybindings.json"
+        False, "--keybindings", help="Include keybindings.json",
     ),
     extensions: bool = typer.Option(
-        False, "--extensions", help="Include extensions list"
+        False, "--extensions", help="Include extensions list",
     ),
     snippets: bool = typer.Option(
-        False, "--snippets", help="Include snippets directory"
+        False, "--snippets", help="Include snippets directory",
     ),
     overwrite: bool = typer.Option(
         False,
@@ -373,7 +423,7 @@ def pull(
         help="Show full content preview in pager (like git diff)",
     ),
     no_pager: bool = typer.Option(
-        False, "--no-pager", help="Disable pager for full preview output"
+        False, "--no-pager", help="Disable pager for full preview output",
     ),
 ) -> None:
     """Pull configurations from an application or project to the repository."""
@@ -384,27 +434,27 @@ def pull(
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
             )
             raise typer.Exit(1)
 
         # Validate arguments
         if from_project and app_alias:
             console.print(
-                "[red]Error:[/red] Cannot specify both app_alias and --from-project"
+                "[red]Error:[/red] Cannot specify both app_alias and --from-project",
             )
             raise typer.Exit(1)
 
         if not from_project and not app_alias:
             console.print(
-                "[red]Error:[/red] Must specify either app_alias or --from-project"
+                "[red]Error:[/red] Must specify either app_alias or --from-project",
             )
             raise typer.Exit(1)
 
         # Warn about extensions in project mode
         if from_project and extensions:
             console.print(
-                "[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring"
+                "[yellow]Warning:[/yellow] --include-extensions is not available in project mode, ignoring",
             )
             extensions = False
 
@@ -438,26 +488,26 @@ def pull(
 @app.command()
 def edit(
     layer_type: str = typer.Argument(
-        ..., help="Layer type: base, app, stack, project, live"
+        ..., help="Layer type: base, app, stack, project, live",
     ),
     layer_name: Optional[str] = typer.Argument(
-        None, help="Layer name (not needed for base)"
+        None, help="Layer name (not needed for base)",
     ),
     # Mutually-exclusive file-type flags (default: settings)
     settings_flag: bool = typer.Option(
-        False, "--settings", help="Edit settings.json"
+        False, "--settings", help="Edit settings.json",
     ),
     keybindings_flag: bool = typer.Option(
-        False, "--keybindings", help="Edit keybindings.json"
+        False, "--keybindings", help="Edit keybindings.json",
     ),
     extensions_flag: bool = typer.Option(
-        False, "--extensions", help="Edit extensions.json"
+        False, "--extensions", help="Edit extensions.json",
     ),
     snippets_flag: bool = typer.Option(
-        False, "--snippets", help="Edit snippets directory"
+        False, "--snippets", help="Edit snippets directory",
     ),
     tasks_flag: bool = typer.Option(
-        False, "--tasks", help="Edit tasks.json"
+        False, "--tasks", help="Edit tasks.json",
     ),
     sort: bool = typer.Option(
         False,
@@ -479,7 +529,7 @@ def edit(
 
         if not config_manager.is_initialized():
             console.print(
-                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]"
+                "[red]vsc-sync is not initialized. Run 'vsc-sync init' first.[/red]",
             )
             raise typer.Exit(1)
 
@@ -520,7 +570,7 @@ def edit(
 @app.command()
 def discover(
     add_found: bool = typer.Option(
-        False, "--add", help="Automatically add discovered apps to configuration"
+        False, "--add", help="Automatically add discovered apps to configuration",
     ),
 ) -> None:
     """Discover VSCode-like applications on the system."""
@@ -567,7 +617,7 @@ def discover(
             console.print("[yellow]Auto-add functionality coming soon![/yellow]")
         else:
             console.print(
-                "\nUse 'vsc-sync discover --add' to automatically add these to your configuration."
+                "\nUse 'vsc-sync discover --add' to automatically add these to your configuration.",
             )
             console.print("Or use 'vsc-sync add-app' to add them individually.")
 
