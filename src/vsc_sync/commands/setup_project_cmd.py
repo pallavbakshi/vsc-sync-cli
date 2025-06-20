@@ -1,21 +1,18 @@
 """Implementation of the setup-project command."""
 
-import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm
-from rich.syntax import Syntax
 from rich.table import Table
 
 from ..config import ConfigManager
 from ..core.config_manager import LayerConfigManager
 from ..core.file_ops import FileOperations
 from ..exceptions import LayerNotFoundError, VscSyncError
-from ..models import ExtensionsConfig, LayerInfo, MergeResult
+from ..models import LayerInfo, MergeResult
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -39,7 +36,7 @@ class SetupProjectCommand:
         """Execute the setup-project command."""
         try:
             console.print(
-                f"[bold blue]Setting up .vscode/ for project:[/bold blue] {project_path}"
+                f"[bold blue]Setting up .vscode/ for project:[/bold blue] {project_path}",
             )
 
             # Step 1: Validate and resolve project path
@@ -95,7 +92,7 @@ class SetupProjectCommand:
         return vscode_dir
 
     def _merge_project_layers(
-        self, from_project_type: Optional[str], stacks: List[str]
+        self, from_project_type: Optional[str], stacks: List[str],
     ) -> MergeResult:
         """Merge configuration layers for project setup."""
         layers = []
@@ -107,13 +104,13 @@ class SetupProjectCommand:
                     layer_type="project",
                     layer_name=from_project_type,
                     path=self.layer_manager.get_layer_path(
-                        "project", from_project_type
+                        "project", from_project_type,
                     ),
                 )
                 layers.append(project_layer)
             else:
                 raise LayerNotFoundError(
-                    f"Project type '{from_project_type}' not found"
+                    f"Project type '{from_project_type}' not found",
                 )
 
         # Add stack layers
@@ -130,7 +127,7 @@ class SetupProjectCommand:
 
         if not layers:
             raise VscSyncError(
-                "No layers specified. Use --from-project-type or --stack to specify configuration sources."
+                "No layers specified. Use --from-project-type or --stack to specify configuration sources.",
             )
 
         # Merge settings.json from all layers
@@ -140,7 +137,7 @@ class SetupProjectCommand:
             if settings_file.exists():
                 layer_settings = self.layer_manager.load_json_file(settings_file)
                 merged_settings = self.layer_manager.deep_merge_dicts(
-                    merged_settings, layer_settings
+                    merged_settings, layer_settings,
                 )
 
         # Collect extensions from all layers
@@ -185,7 +182,7 @@ class SetupProjectCommand:
 
         if files_to_create:
             console.print(
-                f"\n[bold]Files to create/update:[/bold] {', '.join(files_to_create)}"
+                f"\n[bold]Files to create/update:[/bold] {', '.join(files_to_create)}",
             )
 
     def _confirm_overwrite(self, vscode_dir: Path, merge_result: MergeResult) -> bool:
@@ -204,7 +201,7 @@ class SetupProjectCommand:
             return True  # No conflicts, proceed
 
         console.print(
-            f"\n[yellow]Existing files found:[/yellow] {', '.join(existing_files)}"
+            f"\n[yellow]Existing files found:[/yellow] {', '.join(existing_files)}",
         )
         console.print("These files will be overwritten.")
 
@@ -217,24 +214,24 @@ class SetupProjectCommand:
         # Write settings.json
         if merge_result.merged_settings:
             settings_file = vscode_dir / "settings.json"
-            console.print(f"[cyan]Writing settings.json...[/cyan]")
+            console.print("[cyan]Writing settings.json...[/cyan]")
             FileOperations.write_json_file(settings_file, merge_result.merged_settings)
             console.print(f"[green]✓[/green] Created {settings_file}")
 
         # Write extensions.json
         if merge_result.extensions:
             extensions_file = vscode_dir / "extensions.json"
-            console.print(f"[cyan]Writing extensions.json...[/cyan]")
+            console.print("[cyan]Writing extensions.json...[/cyan]")
 
             extensions_config = {"recommendations": merge_result.extensions}
             FileOperations.write_json_file(extensions_file, extensions_config)
             console.print(f"[green]✓[/green] Created {extensions_file}")
 
     def _show_success_message(
-        self, project_path: Path, merge_result: MergeResult
+        self, project_path: Path, merge_result: MergeResult,
     ) -> None:
         """Show success message after setting up project."""
-        console.print(f"\n[bold green]✓ Project setup completed![/bold green]")
+        console.print("\n[bold green]✓ Project setup completed![/bold green]")
         console.print(f"Project directory: [cyan]{project_path}[/cyan]")
 
         created_files = []
@@ -248,7 +245,7 @@ class SetupProjectCommand:
 
         # Advise about git
         console.print(
-            "\n[yellow]Recommendation:[/yellow] Commit the .vscode/ directory to your project's Git repository"
+            "\n[yellow]Recommendation:[/yellow] Commit the .vscode/ directory to your project's Git repository",
         )
         console.print("to share these settings with your team:")
         console.print("[dim]  git add .vscode/[/dim]")

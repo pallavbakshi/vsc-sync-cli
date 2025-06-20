@@ -3,7 +3,6 @@
 import logging
 import platform
 from pathlib import Path
-from typing import Optional
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -29,22 +28,19 @@ def get_platform_config_dir() -> Path:
 
     if system == "Darwin":  # macOS
         return Path.home() / "Library" / "Application Support"
-    elif system == "Windows":
+    if system == "Windows":
         return Path.home() / "AppData" / "Roaming"
-    else:  # Linux and others
-        return Path.home() / ".config"
+    # Linux and others
+    return Path.home() / ".config"
 
 
 def get_vsc_sync_config_path() -> Path:
     """Get the path where vsc-sync stores its own configuration."""
     config_dir = get_platform_config_dir()
 
-    if platform.system() == "Darwin":
+    if platform.system() == "Darwin" or platform.system() == "Windows":
         return config_dir / "vsc-sync" / "config.json"
-    elif platform.system() == "Windows":
-        return config_dir / "vsc-sync" / "config.json"
-    else:
-        return config_dir / "vsc-sync" / "config.json"
+    return config_dir / "vsc-sync" / "config.json"
 
 
 def resolve_path(path_str: str) -> Path:

@@ -1,78 +1,283 @@
-# Layer precedence & conflict resolution
+# Layer Precedence & Conflict Resolution
 
-When **VSC Sync CLI** builds the final VS Code configuration for a machine it
-combines several *layers* of files. If the same setting appears in more than
-one layer, the **layer applied last wins**.  This page explains the exact order
-and the logic behind it.
+VSC Sync CLI has two distinct layer systems for maximum flexibility:
 
-## Precedence order
+1. **Standard Layer System** (traditional) - for `--stack` flags
+2. **Custom Layer System** (new) - for `--layer0`, `--layer1`, etc. and `--preset` flags
 
+This page explains how both systems handle precedence and conflict resolution.
+
+---
+
+## Standard Layer System (Traditional)
+
+### Precedence Order
 ```
 base   ← lowest priority
 app
 stack(s)  ← highest priority (last one wins if multiple)
 ```
 
-1. **base/** – settings/snippets/extensions that should apply *everywhere*.
-2. **apps/<alias>/** – overrides specific to the running editor (VS Code,
-   VSCodium, Cursor, …).
-3. **stacks/<name>/** – language- or framework-specific tweaks, e.g. `python`,
-   `web-dev`. If you pass multiple `--stack` options, they are applied in the
-   order given on the command line and the *right-most* one has the final say.
+1. **base/** – settings/snippets/extensions that apply everywhere
+2. **apps/<alias>/** – overrides specific to the running editor (VSCode, Cursor, etc.)
+3. **stacks/<name>/** – language/framework-specific tweaks (python, web-dev, etc.)
 
-Projects
-:   `projects/<repo-name>/` layers sit outside this automatic merge because they
-    are copied verbatim into the **workspace folder** rather than into the
-    global user-profile.
+Multiple stacks are applied in command-line order:
+```bash
+vsc-sync apply vscode --settings --stack python --stack web
+# Order: base → app → python → web (web wins conflicts)
+```
 
-## What happens on conflict?
+### Projects
+`projects/<repo-name>/` layers sit outside automatic merge - they're copied verbatim into workspace folders rather than global user profiles.
 
-The merge algorithm lives in
-`vsc_sync/core/config_manager.py → LayerConfigManager.deep_merge_dicts`.
+---
 
-• For every duplicate key, the value coming from the **later layer** replaces
-  the previous one. 
-• Nested dictionaries are merged recursively, so only the conflicting subtree
-  is replaced, not the entire parent.
-• Lists (like the `recommendations` array in `extensions.json`) are
-  *concatenated* and deduplicated to avoid duplicates.
+## Custom Layer System (Enhanced)
 
-### Example
+### Explicit Layer Ordering
+The custom layer system gives you complete control over layer ordering:
 
-Assume the setting `"editor.tabSize"` is defined in all three layers:
+```bash
+vsc-sync apply vscode --settings \
+  --layer0 base \       # Applied first (lowest priority)
+  --layer1 python \     # Applied second
+  --layer2 vscode \     # Applied third  
+  --layer3 personal     # Applied last (highest priority)
+```
 
-| Layer | Value |
-|-------|-------|
-| base  | `2`   |
-| app   | `4`   |
-| stack | `8`   |
+### Layer Presets
+Presets are resolved to explicit layer ordering:
+```bash
+# config.toml: python-dev = ["base", "python", "personal"]
+vsc-sync apply vscode --settings --preset python-dev
 
-Final output after `vsc-sync apply` → `"editor.tabSize": 8`.
+# Equivalent to:
+vsc-sync apply vscode --settings \
+  --layer0 base --layer1 python --layer2 personal
+```
 
-## Keybindings & snippets
+---
 
-* `keybindings.json` is **not merged**. The file from the *most specific* layer
-  that provides it is copied (search order: last stack → first stack → app →
-  base).
-* Snippets directories from *all* layers are unioned and copied into the
-  target VS Code profile.
+## Configuration File Merging
 
-### Why keybindings are not merged
+### Settings.json (Deep Merge)
+Settings are deeply merged across all layers. The merge algorithm in `vsc_sync/core/config_manager.py` handles conflicts:
 
-VS Code represents keybindings as an **ordered list of objects**. If two layers
-define shortcuts for the same keystroke VS Code keeps **both** entries and only
-the *last one defined in the file wins*, so naïvely concatenating JSON arrays
-can lead to unpredictable behaviour.
+• **Duplicate keys**: Later layer value replaces earlier layer value
+• **Nested objects**: Merged recursively (only conflicting subtrees replaced)
+• **Arrays**: Concatenated and deduplicated
 
-To keep things explicit vsc-sync takes the first `keybindings.json` it finds
-when scanning layers from most-specific to least and copies it verbatim into
-the user profile.  That means you get one authoritative place to edit
-shortcuts per machine configuration.
+#### Example: Settings Merge
+```json
+// base/settings.json
+{
+  "editor.tabSize": 2,
+  "editor.fontSize": 12,
+  "python.linting": {
+    "enabled": true,
+    "pylintEnabled": false
+  }
+}
 
-If you *need* different keybindings for, say, Linux vs macOS: put the file in
-the corresponding **app layer** (`apps/vscode-linux/`, `apps/vscode-macos/`, …)
-or create dedicated stacks (e.g. `stacks/linux`) and pass the appropriate
-`--stack` flag when applying.
+// python/settings.json  
+{
+  "editor.tabSize": 4,
+  "python.linting": {
+    "pylintEnabled": true,
+    "flake8Enabled": true
+  }
+}
+
+// Result after merge:
+{
+  "editor.tabSize": 4,           // python layer wins
+  "editor.fontSize": 12,         // from base layer
+  "python.linting": {
+    "enabled": true,             // from base layer
+    "pylintEnabled": true,       // python layer wins
+    "flake8Enabled": true        // from python layer
+  }
+}
+```
+
+---
+
+## Keybindings Behavior (CHANGED)
+
+**🎯 Major Change**: Keybindings now merge from all layers instead of using "last layer wins".
+
+### New Behavior: Merge All Layers
+```bash
+vsc-sync apply vscode --keybindings --layer0 base --layer1 python --layer2 personal
+```
+
+**Result**: Keybindings from all layers are combined:
+```json
+[
+  // All keybindings from base/keybindings.json
+  {"key": "ctrl+shift+p", "command": "workbench.action.showCommands"},
+  
+  // All keybindings from python/keybindings.json  
+  {"key": "f5", "command": "python.debugCurrentFile"},
+  
+  // All keybindings from personal/keybindings.json
+  {"key": "ctrl+`", "command": "workbench.action.terminal.toggle"}
+]
+```
+
+### Why We Changed This
+1. **More Intuitive**: Users expect layers to combine, not override
+2. **Better Composability**: Build complex keybinding sets from simple layers
+3. **Preserves User Intent**: Each layer's keybindings are preserved
+4. **Easier Management**: Edit keybindings in focused, single-purpose layers
+
+### Conflict Resolution
+If multiple layers define the same keystroke, **all entries are preserved**. VSCode's own conflict resolution determines which one takes effect (last entry in array wins).
+
+### Migration from Old Behavior
+**Old way** (single authoritative file):
+```bash
+# Only one keybindings.json would be used
+vsc-sync apply vscode --keybindings --stack python --stack web
+```
+
+**New way** (all layers combined):
+```bash
+# All keybindings.json files are merged
+vsc-sync apply vscode --keybindings --layer0 base --layer1 python --layer2 web
+```
+
+---
+
+## Extensions & Snippets
+
+### Extensions.json (List Concatenation)
+Extensions from all layers are combined and deduplicated:
+```json
+// base/extensions.json: ["ms-python.python"]
+// web/extensions.json: ["esbenp.prettier-vscode", "ms-python.python"]
+// Result: ["ms-python.python", "esbenp.prettier-vscode"]
+```
+
+### Snippets (Directory Union)
+Snippet directories from all layers are combined:
+```
+base/snippets/global.json       → copied
+python/snippets/python.json    → copied  
+web/snippets/javascript.json   → copied
+```
+
+---
+
+## Conflict Resolution Examples
+
+### Settings Conflicts
+```bash
+vsc-sync apply vscode --settings \
+  --layer0 base \      # "editor.tabSize": 2
+  --layer1 python \    # "editor.tabSize": 4  
+  --layer2 personal    # "editor.fontSize": 16
+
+# Result: tabSize=4 (python wins), fontSize=16 (personal only)
+```
+
+### Keybinding Conflicts
+```bash
+vsc-sync apply vscode --keybindings \
+  --layer0 base \      # [{"key": "f5", "command": "workbench.action.debug.start"}]
+  --layer1 python      # [{"key": "f5", "command": "python.debugCurrentFile"}]
+
+# Result: Both entries preserved, python wins due to array order
+```
+
+### Extension Conflicts
+```bash
+vsc-sync apply vscode --extensions \
+  --layer0 base \      # ["ms-python.python", "ms-vscode.vscode-json"]
+  --layer1 python      # ["ms-python.python", "ms-python.pylint"]
+
+# Result: ["ms-python.python", "ms-vscode.vscode-json", "ms-python.pylint"]
+# (duplicates removed automatically)
+```
+
+---
+
+## Best Practices
+
+### Layer Organization
+1. **Keep base minimal**: Essential settings that apply everywhere
+2. **Use focused layers**: Each layer should have a clear, single purpose  
+3. **Order by specificity**: General → specific → personal
+4. **Document conflicts**: Use `--dry-run` to preview merges
+
+### Keybinding Management
+1. **Avoid duplicate keys across layers**: Prevents conflicts
+2. **Use layer-specific prefixes**: e.g., python layer uses `ctrl+p` prefix
+3. **Sort for clarity**: Use `vsc-sync edit --keybindings --sort` to organize
+4. **Test combinations**: Preview with `--dry-run` before applying
+
+### Debugging Conflicts
+```bash
+# Preview what will be merged
+vsc-sync apply vscode --all --preset python-dev --dry-run
+
+# Check individual layers
+vsc-sync edit base --settings
+vsc-sync edit stack python --settings
+
+# Sort keybindings to spot conflicts
+vsc-sync edit base --keybindings --sort --yes
+```
+
+---
+
+## Layer Resolution Priority
+
+When using custom layers, resolution follows this priority:
+
+1. **Intelligent name resolution**: Search in vscode-configs directories
+2. **TOML alias resolution**: Match against config.toml aliases  
+3. **Literal path resolution**: Treat as file/directory path
+
+```bash
+# These all work:
+--layer0 base           # Found in ~/vscode-configs/base/
+--layer1 python         # Found in ~/vscode-configs/stacks/python/
+--layer2 personal       # Alias from config.toml
+--layer3 /custom/path   # Literal path
+```
+
+---
+
+## Mental Model
+
+> **Standard layers**: Automatic precedence (base → app → stacks)
+> **Custom layers**: Explicit precedence (--layer0 → --layer1 → --layer2...)
+> **All systems**: Later layers win conflicts, keybindings merge instead of override
+
+Understanding these precedence rules helps you design layer structures that behave predictably and meet your specific configuration needs.
+
+---
+
+## Handy Tips
+
+### Sort Keybindings for Conflict Detection
+```bash
+vsc-sync edit base --keybindings --sort --yes
+```
+Creates alphabetized keybindings grouped by key and `when` clause, making conflicts easy to spot.
+
+### Preview Merges
+```bash
+vsc-sync apply vscode --all --preset python-dev --dry-run
+```
+Shows exactly what would be applied without making changes.
+
+### Check Layer Resolution
+```bash
+vsc-sync config --show  # Verify your vscode_configs_path and aliases
+```
 
 ## Take-away
 

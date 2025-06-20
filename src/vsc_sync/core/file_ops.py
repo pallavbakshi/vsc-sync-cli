@@ -37,7 +37,7 @@ class FileOperations:
 
     @staticmethod
     def write_json_file(
-        file_path: Path, data: Dict[str, Any], create_dirs: bool = True
+        file_path: Path, data: Dict[str, Any], create_dirs: bool = True,
     ) -> None:
         """Write data to a JSON file."""
         if create_dirs:
@@ -59,7 +59,7 @@ class FileOperations:
             return {}
 
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 return json.load(f)
 
         except Exception as e:
@@ -84,7 +84,7 @@ class FileOperations:
 
     @staticmethod
     def copy_directory_contents(
-        source_dir: Path, destination_dir: Path, overwrite_existing: bool = True
+        source_dir: Path, destination_dir: Path, overwrite_existing: bool = True,
     ) -> None:
         """Copy contents of source directory to destination directory."""
         if not source_dir.exists():
@@ -112,7 +112,7 @@ class FileOperations:
 
         except Exception as e:
             raise VscSyncError(
-                f"Failed to copy directory contents from {source_dir} to {destination_dir}: {e}"
+                f"Failed to copy directory contents from {source_dir} to {destination_dir}: {e}",
             )
 
     @staticmethod

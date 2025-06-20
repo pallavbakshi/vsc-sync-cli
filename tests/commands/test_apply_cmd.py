@@ -231,13 +231,21 @@ class TestApplyCommand:
 
         apply_cmd = ApplyCommand(config_manager)
 
-        # Use the keybindings from the mock repo
+        # Load the keybindings from the mock repo and pass as merged keybindings
         keybindings_source = mock_vscode_configs_repo / "base" / "keybindings.json"
-        apply_cmd._apply_keybindings(app_details, keybindings_source)
+        import json
+        with keybindings_source.open() as f:
+            keybindings_data = json.load(f)
+        
+        apply_cmd._apply_keybindings(app_details, keybindings_data)
 
         keybindings_file = app_config_dir / "keybindings.json"
         assert keybindings_file.exists()
-        assert keybindings_file.read_text() == keybindings_source.read_text()
+        
+        # Verify the content matches
+        with keybindings_file.open() as f:
+            applied_keybindings = json.load(f)
+        assert applied_keybindings == keybindings_data
 
     def test_apply_snippets(self, temp_dir, mock_vscode_configs_repo):
         """Test applying snippets."""

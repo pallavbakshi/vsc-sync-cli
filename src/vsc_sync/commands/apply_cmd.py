@@ -35,6 +35,7 @@ class ApplyCommand:
         self,
         app_alias: str,
         stacks: Optional[List[str]] = None,
+        custom_layers: Optional[List[tuple[int, Path]]] = None,
         backup: bool = True,
         backup_suffix: Optional[str] = None,
         dry_run: bool = False,
@@ -71,13 +72,18 @@ class ApplyCommand:
                 )
 
             # Step 4: Merge configuration layers
-            stacks = stacks or []
-            merge_result = self.layer_manager.merge_layers(
-                app_alias=app_alias, stacks=stacks,
-            )
+            if custom_layers:
+                # Use custom layers instead of standard hierarchy
+                merge_result = self.layer_manager.merge_custom_layers(custom_layers)
+            else:
+                # Use standard hierarchy (base -> app -> stacks)
+                stacks = stacks or []
+                merge_result = self.layer_manager.merge_layers(
+                    app_alias=app_alias, stacks=stacks,
+                )
 
             # Step 5: Show what will be applied
-            self._show_merge_summary(merge_result, stacks)
+            self._show_merge_summary(merge_result, stacks if not custom_layers else [])
 
             if dry_run:
                 # Step 6a: Dry run - show differences
@@ -350,14 +356,14 @@ class ApplyCommand:
 
         if merged_keybindings:
             current_keybindings = FileOperations.read_json_file(current_keybindings_file)
-            
+
             if current_keybindings == merged_keybindings:
                 console.print("[green]No changes needed[/green]")
             else:
                 console.print(
-                    f"[yellow]Will write merged keybindings ([cyan]{len(merged_keybindings)} entries[/cyan])[/yellow]"
+                    f"[yellow]Will write merged keybindings ([cyan]{len(merged_keybindings)} entries[/cyan])[/yellow]",
                 )
-                
+
                 # Show count from each layer if possible
                 current_count = len(current_keybindings) if isinstance(current_keybindings, list) else 0
                 console.print(f"  Current: {current_count} keybindings")

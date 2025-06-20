@@ -50,7 +50,7 @@ class EditCommand:
         """Execute the edit command."""
         try:
             console.print(
-                f"[bold blue]Opening {layer_type} {file_type} for editing...[/bold blue]"
+                f"[bold blue]Opening {layer_type} {file_type} for editing...[/bold blue]",
             )
 
             # Step 1: Validate inputs
@@ -83,19 +83,19 @@ class EditCommand:
             raise VscSyncError(f"Edit failed: {e}")
 
     def _validate_inputs(
-        self, layer_type: str, layer_name: Optional[str], file_type: str
+        self, layer_type: str, layer_name: Optional[str], file_type: str,
     ) -> None:
         """Validate command inputs."""
         if layer_type not in LAYER_TYPE_PATHS:
             available_types = ", ".join(LAYER_TYPE_PATHS.keys())
             raise VscSyncError(
-                f"Invalid layer type '{layer_type}'. Available: {available_types}"
+                f"Invalid layer type '{layer_type}'. Available: {available_types}",
             )
 
         if file_type not in FILE_TYPE_MAPPING:
             available_types = ", ".join(FILE_TYPE_MAPPING.keys())
             raise VscSyncError(
-                f"Invalid file type '{file_type}'. Available: {available_types}"
+                f"Invalid file type '{file_type}'. Available: {available_types}",
             )
 
         # layer_name is required for non-base layers
@@ -107,11 +107,11 @@ class EditCommand:
             available_apps = list(self.config.managed_apps.keys())
             raise VscSyncError(
                 f"App '{layer_name}' is not registered. "
-                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}"
+                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}",
             )
 
     def _construct_file_path(
-        self, layer_type: str, layer_name: Optional[str], file_type: str
+        self, layer_type: str, layer_name: Optional[str], file_type: str,
     ) -> Path:
         """Construct the full path to the configuration file."""
 
@@ -120,8 +120,7 @@ class EditCommand:
             app_details = self.config.managed_apps[layer_name]
             if file_type == "snippets":
                 return app_details.config_path / FILE_TYPE_MAPPING[file_type]
-            else:
-                return app_details.config_path / FILE_TYPE_MAPPING[file_type]
+            return app_details.config_path / FILE_TYPE_MAPPING[file_type]
 
         # Normal handling for vscode-configs repository files
         configs_path = self.config.vscode_configs_path
@@ -134,19 +133,17 @@ class EditCommand:
         # Handle special case for snippets directory
         if file_type == "snippets":
             return layer_path / FILE_TYPE_MAPPING[file_type]
-        else:
-            return layer_path / FILE_TYPE_MAPPING[file_type]
+        return layer_path / FILE_TYPE_MAPPING[file_type]
 
     def _prompt_create_file(self, file_path: Path) -> bool:
         """Ask user if they want to create the file if it doesn't exist."""
         if file_path.name == "snippets":
             console.print(
-                f"[yellow]Snippets directory doesn't exist:[/yellow] {file_path}"
+                f"[yellow]Snippets directory doesn't exist:[/yellow] {file_path}",
             )
             return Confirm.ask("Create snippets directory?", default=True)
-        else:
-            console.print(f"[yellow]File doesn't exist:[/yellow] {file_path}")
-            return Confirm.ask("Create new file?", default=True)
+        console.print(f"[yellow]File doesn't exist:[/yellow] {file_path}")
+        return Confirm.ask("Create new file?", default=True)
 
     def _create_file_if_needed(self, file_path: Path, file_type: str) -> None:
         """Create file or directory with appropriate initial content."""
@@ -167,14 +164,13 @@ class EditCommand:
         """Get initial content for new configuration files."""
         if file_type == "settings":
             return "{\n}\n"
-        elif file_type == "keybindings":
+        if file_type == "keybindings":
             return "[\n]\n"
-        elif file_type == "extensions":
+        if file_type == "extensions":
             return '{\n  "recommendations": [\n  ]\n}\n'
-        elif file_type == "tasks":
+        if file_type == "tasks":
             return '{\n  "version": "2.0.0",\n  "tasks": []\n}\n'
-        else:
-            return "{}\n"
+        return "{}\n"
 
     # ------------------------------------------------------------------
     # Keybindings sorting
@@ -209,7 +205,8 @@ class EditCommand:
             return
 
         try:
-            import json, re
+            import json
+            import re
 
             raw_text = file_path.read_text(encoding="utf-8")
 
@@ -298,7 +295,7 @@ class EditCommand:
             # -----------------------------------------------------------------
             if not yes:
                 console.print(
-                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted list (entries: {len(bindings)})."
+                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted list (entries: {len(bindings)}).",
                 )
                 if not Confirm.ask("Proceed?", default=True):
                     console.print("[yellow]Sort cancelled.[/yellow]")
@@ -314,7 +311,7 @@ class EditCommand:
                 encoding="utf-8",
             )
 
-            console.print(f"[green]✓[/green] keybindings sorted")
+            console.print("[green]✓[/green] keybindings sorted")
 
         except Exception as exc:
             console.print(f"[red]Failed to sort keybindings:[/red] {exc}")
@@ -339,7 +336,8 @@ class EditCommand:
             return
 
         try:
-            import json, re
+            import json
+            import re
 
             raw_text = file_path.read_text(encoding="utf-8")
 
@@ -422,7 +420,7 @@ class EditCommand:
             # ------------------------------------------------------------
             if not yes:
                 console.print(
-                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted settings file (entries: {len(sorted_settings)}; duplicates removed: {duplicates_removed})."
+                    f"This will overwrite [bold]{file_path}[/bold] with a best-effort sorted settings file (entries: {len(sorted_settings)}; duplicates removed: {duplicates_removed}).",
                 )
                 if not Confirm.ask("Proceed?", default=True):
                     console.print("[yellow]Sort cancelled.[/yellow]")
@@ -437,7 +435,7 @@ class EditCommand:
             )
 
             console.print(
-                f"[green]✓[/green] settings sorted ({duplicates_removed} duplicates removed)"
+                f"[green]✓[/green] settings sorted ({duplicates_removed} duplicates removed)",
             )
 
         except Exception as exc:
@@ -451,17 +449,17 @@ class EditCommand:
             if file_path.is_dir():
                 # For snippets directory, open the directory
                 console.print(
-                    f"[cyan]Opening directory in {editor}:[/cyan] {file_path}"
+                    f"[cyan]Opening directory in {editor}:[/cyan] {file_path}",
                 )
             else:
                 console.print(f"[cyan]Opening file in {editor}:[/cyan] {file_path}")
 
             # Try to open with the editor
             result = subprocess.run(
-                [editor, str(file_path)], check=True, capture_output=True, text=True
+                [editor, str(file_path)], check=True, capture_output=True, text=True,
             )
 
-            console.print(f"[green]✓[/green] Opened successfully")
+            console.print("[green]✓[/green] Opened successfully")
 
         except subprocess.CalledProcessError as e:
             console.print(f"[red]Failed to open with {editor}:[/red] {e}")
@@ -481,7 +479,7 @@ class EditCommand:
         for editor in editors_to_try:
             try:
                 result = subprocess.run(
-                    [editor, "--version"], check=True, capture_output=True, text=True
+                    [editor, "--version"], check=True, capture_output=True, text=True,
                 )
                 return editor
             except (subprocess.CalledProcessError, FileNotFoundError):
@@ -490,7 +488,7 @@ class EditCommand:
         # 2. Fall back to system defaults based on platform
         if sys.platform == "darwin":  # macOS
             return "open"
-        elif sys.platform == "win32":  # Windows
+        if sys.platform == "win32":  # Windows
             return "start"
-        else:  # Linux and others
-            return "xdg-open"
+        # Linux and others
+        return "xdg-open"

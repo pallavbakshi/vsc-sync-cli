@@ -1,0 +1,61 @@
+# vsc-sync configuration file
+# Location: ~/.config/vsc-sync/config.toml
+
+# Path to your vscode-configs repository for intelligent layer name resolution
+# This enables you to use short names like "base", "python", "vscode" instead of full paths
+vscode_configs_path = "~/vscode-configs"
+
+[defaults]
+# Default components to apply when none are specified
+components = ["settings", "keybindings"]
+# Create backups by default
+backup = true
+# Default extension management mode: "add", "remove-extra", "replace-all"
+extension_mode = "add"
+
+# Layer aliases - shortcuts for commonly used layer paths
+[layer_aliases.base]
+name = "base"
+path = "~/vscode-configs/base"
+description = "Base configuration layer with common settings"
+
+[layer_aliases.python]
+name = "python"
+path = "~/vscode-configs/stacks/python"
+description = "Python development environment"
+
+[layer_aliases.web]
+name = "web"
+path = "~/vscode-configs/stacks/web"
+description = "Web development environment"
+
+[layer_aliases.personal]
+name = "personal"
+path = "~/my-configs/personal-overrides.json"
+description = "Personal preference overrides"
+
+[layer_aliases.work]
+name = "work"
+path = "~/work-configs/company-standards"
+description = "Company coding standards and preferences"
+
+# Layer presets - predefined combinations of layers
+[layer_presets]
+python-dev = ["base", "python", "personal"]
+web-dev = ["base", "web", "personal"]
+work-python = ["base", "python", "work"]
+minimal = ["base"]
+full-stack = ["base", "python", "web", "personal"]
+
+# Editor-specific settings
+[editor_settings.vscode]
+auto_backup = true
+extension_timeout = 10
+
+[editor_settings.cursor]
+auto_backup = false
+extension_timeout = 15
+
+[editor_settings.windsurf]
+auto_backup = true
+extension_timeout = 20

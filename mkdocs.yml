@@ -44,7 +44,10 @@ nav:
       - Installation: installation.md
       - Quick Start: tutorials/quick-start.md
       - Template Config Repo: template-config.md
-  - Usage Guide: usage.md
+  - User Guide:
+      - Usage Guide: usage.md
+      - Advanced Usage: advanced-usage.md
+      - Configuration: configuration.md
   - Behind the Scenes:
       - How It Works: how-it-works.md
       - Layer Precedence: behind-the-scenes/layer-precedence.md

@@ -53,7 +53,14 @@ def init(
         None, "--config-file", help="Path to store vsc-sync configuration",
     ),
 ) -> None:
-    """Initialize vsc-sync for first-time use."""
+    """Initialize vsc-sync for first-time use.
+    
+    This will:
+    - Set up your vscode-configs repository
+    - Auto-discover VSCode-like applications
+    - Create TOML configuration for intelligent layer resolution
+    - Enable you to use simple names like 'base', 'python', 'vscode'
+    """
     try:
         from .commands.init_cmd import InitCommand
 
@@ -192,6 +199,28 @@ def apply(
         False, "--config", help="Apply config files only (settings, keybindings, tasks)",
     ),
 
+    # Custom layer flags
+    layer0: Optional[str] = typer.Option(
+        None, "--layer0", help="Base layer path (file or directory) or alias",
+    ),
+    layer1: Optional[str] = typer.Option(
+        None, "--layer1", help="Second layer path (file or directory) or alias",
+    ),
+    layer2: Optional[str] = typer.Option(
+        None, "--layer2", help="Third layer path (file or directory) or alias",
+    ),
+    layer3: Optional[str] = typer.Option(
+        None, "--layer3", help="Fourth layer path (file or directory) or alias",
+    ),
+    layer4: Optional[str] = typer.Option(
+        None, "--layer4", help="Fifth layer path (file or directory) or alias",
+    ),
+    
+    # Layer preset flag
+    preset: Optional[str] = typer.Option(
+        None, "--preset", help="Use a predefined layer preset from config.toml",
+    ),
+
     # Extension-specific flags
     remove_extra: bool = typer.Option(
         False, "--remove-extra", help="Remove extensions not in configuration (requires --extensions)",
@@ -231,6 +260,53 @@ def apply(
             )
             raise typer.Exit(1)
 
+        # Load TOML config for layer resolution
+        from .config_toml import TomlConfigManager
+        toml_config_manager = TomlConfigManager()
+        
+        # Handle layer preset first
+        if preset:
+            if any([layer0, layer1, layer2, layer3, layer4]):
+                console.print(
+                    "[red]Error:[/red] Cannot use --preset with --layer flags. Use either --preset or individual --layer flags.",
+                )
+                raise typer.Exit(1)
+            
+            if stack:
+                console.print(
+                    "[red]Error:[/red] Cannot use --preset with --stack flags. Use either --preset or --stack.",
+                )
+                raise typer.Exit(1)
+            
+            # Resolve preset to paths
+            preset_paths = toml_config_manager.resolve_layer_preset(preset)
+            if preset_paths is None:
+                console.print(f"[red]Error:[/red] Layer preset '{preset}' not found in config.toml")
+                raise typer.Exit(1)
+            
+            custom_layers = [(i, path) for i, path in enumerate(preset_paths)]
+        else:
+            # Collect custom layers from individual flags
+            custom_layers = []
+            layer_args = [layer0, layer1, layer2, layer3, layer4]
+            for i, layer_spec in enumerate(layer_args):
+                if layer_spec is not None:
+                    # Use intelligent resolution: name -> alias -> path
+                    resolved_path = toml_config_manager.resolve_layer_spec(layer_spec)
+                    if resolved_path is not None:
+                        custom_layers.append((i, resolved_path))
+                    else:
+                        # If all resolution strategies fail, still try as literal path
+                        # This handles cases where the path doesn't exist yet but user wants to proceed
+                        custom_layers.append((i, Path(layer_spec)))
+
+        # Validate custom layers vs stack flags
+        if custom_layers and stack:
+            console.print(
+                "[red]Error:[/red] Cannot use --layer/--preset flags with --stack flags. Use either standard layers (--stack) or custom layers (--layer0, --layer1, etc. or --preset).",
+            )
+            raise typer.Exit(1)
+
         # Determine which components to include
         if all_components:
             include_settings = True
@@ -263,6 +339,7 @@ def apply(
         apply_command.run(
             app_alias=app_alias,
             stacks=stack,
+            custom_layers=custom_layers if custom_layers else None,
             backup=backup,
             backup_suffix=backup_suffix,
             dry_run=dry_run,
@@ -564,6 +641,121 @@ def edit(
         raise typer.Exit(1)
     except KeyboardInterrupt:
         console.print("\n[yellow]Edit cancelled by user.[/yellow]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def config(
+    init: bool = typer.Option(
+        False, "--init", help="Initialize config.toml with example configuration",
+    ),
+    show: bool = typer.Option(
+        False, "--show", help="Show current configuration",
+    ),
+    edit: bool = typer.Option(
+        False, "--edit", help="Open config.toml in editor",
+    ),
+    path: bool = typer.Option(
+        False, "--path", help="Show path to config.toml file",
+    ),
+) -> None:
+    """Manage vsc-sync configuration file (config.toml)."""
+    try:
+        from .config_toml import TomlConfigManager
+        
+        toml_manager = TomlConfigManager()
+        
+        # Show path
+        if path:
+            console.print(f"Config file location: [cyan]{toml_manager.config_path}[/cyan]")
+            return
+        
+        # Initialize config
+        if init:
+            if toml_manager.config_exists():
+                console.print(f"[yellow]Config file already exists at {toml_manager.config_path}[/yellow]")
+                if not typer.confirm("Overwrite existing config?"):
+                    console.print("Cancelled.")
+                    return
+            
+            example_config = toml_manager.create_example_config()
+            toml_manager.save_config(example_config)
+            console.print(f"[green]✓[/green] Created example config at [cyan]{toml_manager.config_path}[/cyan]")
+            console.print("Edit the file to customize layer aliases and presets.")
+            return
+        
+        # Show config
+        if show:
+            if not toml_manager.config_exists():
+                console.print(f"[yellow]No config file found at {toml_manager.config_path}[/yellow]")
+                console.print("Use 'vsc-sync config --init' to create one.")
+                return
+            
+            config = toml_manager.load_config()
+            
+            console.print("[bold]vsc-sync Configuration[/bold]")
+            console.print(f"File: [dim]{toml_manager.config_path}[/dim]")
+            
+            # Show vscode_configs_path
+            if config.vscode_configs_path:
+                console.print(f"\n[bold]VSCode Configs Path:[/bold]")
+                console.print(f"  {config.vscode_configs_path}")
+                console.print("  [dim](Used for intelligent layer name resolution)[/dim]")
+            
+            # Show defaults
+            console.print("\n[bold]Defaults:[/bold]")
+            console.print(f"  Components: {', '.join(config.defaults.components)}")
+            console.print(f"  Backup: {config.defaults.backup}")
+            console.print(f"  Extension mode: {config.defaults.extension_mode}")
+            
+            # Show layer aliases
+            if config.layer_aliases:
+                console.print("\n[bold]Layer Aliases:[/bold]")
+                for name, alias in config.layer_aliases.items():
+                    console.print(f"  [cyan]{name}[/cyan]: {alias.path}")
+                    if alias.description:
+                        console.print(f"    {alias.description}")
+            
+            # Show layer presets
+            if config.layer_presets:
+                console.print("\n[bold]Layer Presets:[/bold]")
+                for name, layers in config.layer_presets.items():
+                    console.print(f"  [cyan]{name}[/cyan]: {', '.join(layers)}")
+            
+            return
+        
+        # Edit config
+        if edit:
+            import subprocess
+            import os
+            
+            if not toml_manager.config_exists():
+                console.print(f"[yellow]No config file found at {toml_manager.config_path}[/yellow]")
+                if typer.confirm("Create example config first?"):
+                    example_config = toml_manager.create_example_config()
+                    toml_manager.save_config(example_config)
+                else:
+                    return
+            
+            # Try to open in default editor
+            editor = os.environ.get("EDITOR", "nano")
+            try:
+                subprocess.run([editor, str(toml_manager.config_path)], check=True)
+            except subprocess.CalledProcessError:
+                console.print(f"[red]Failed to open editor '{editor}'[/red]")
+                console.print(f"Edit the file manually: {toml_manager.config_path}")
+            except FileNotFoundError:
+                console.print(f"[red]Editor '{editor}' not found[/red]")
+                console.print(f"Edit the file manually: {toml_manager.config_path}")
+            
+            return
+        
+        # Default: show help
+        console.print("Use one of: --init, --show, --edit, or --path")
+        console.print("Example: vsc-sync config --init")
+
+    except VscSyncError as e:
+        console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(1)
 
 

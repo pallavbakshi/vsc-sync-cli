@@ -27,18 +27,18 @@ class GitOperations:
 
     @staticmethod
     def clone_repository(
-        repo_url: str, destination: Path, branch: Optional[str] = None
+        repo_url: str, destination: Path, branch: Optional[str] = None,
     ) -> None:
         """Clone a Git repository to the specified destination."""
         if not GitOperations.is_git_available():
             raise GitOperationError(
-                "Git support is not available. Please install GitPython: pip install gitpython"
+                "Git support is not available. Please install GitPython: pip install gitpython",
             )
 
         try:
             if destination.exists():
                 raise GitOperationError(
-                    f"Destination directory already exists: {destination}"
+                    f"Destination directory already exists: {destination}",
                 )
 
             # Ensure parent directory exists

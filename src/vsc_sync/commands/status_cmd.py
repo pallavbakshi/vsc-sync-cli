@@ -1,14 +1,11 @@
 """Implementation of the status command."""
 
-import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from ..config import ConfigManager
 from ..core.app_manager import AppManager
@@ -30,7 +27,7 @@ class StatusCommand:
         self.layer_manager = LayerConfigManager(self.config.vscode_configs_path)
 
     def _generate_edit_suggestions(
-        self, app_alias: str, stacks: List[str] = None
+        self, app_alias: str, stacks: List[str] = None,
     ) -> Dict[str, str]:
         """Generate edit command suggestions for different file types."""
         suggestions = {
@@ -76,13 +73,13 @@ class StatusCommand:
     def _check_all_apps_status(self) -> None:
         """Check status for all registered applications."""
         console.print(
-            "[bold blue]Checking status for all registered applications...[/bold blue]"
+            "[bold blue]Checking status for all registered applications...[/bold blue]",
         )
 
         if not self.config.managed_apps:
             console.print("No applications registered yet.")
             console.print(
-                "Use 'vsc-sync add-app' to register applications or 'vsc-sync init' to auto-discover."
+                "Use 'vsc-sync add-app' to register applications or 'vsc-sync init' to auto-discover.",
             )
             return
 
@@ -108,7 +105,7 @@ class StatusCommand:
                     status_result["extensions"],
                     status_result["overall"],
                 )
-            except Exception as e:
+            except Exception:
                 table.add_row(
                     app_alias,
                     "[red]ERROR[/red]",
@@ -120,7 +117,7 @@ class StatusCommand:
 
         console.print(table)
         console.print(
-            "\n[dim]Use 'vsc-sync status <app>' for detailed information about a specific app.[/dim]"
+            "\n[dim]Use 'vsc-sync status <app>' for detailed information about a specific app.[/dim]",
         )
 
     def _check_app_status(self, app_alias: str, stacks: List[str]) -> None:
@@ -132,7 +129,7 @@ class StatusCommand:
 
         # Get what configuration would be applied
         merge_result = self.layer_manager.merge_layers(
-            app_alias=app_alias, stacks=stacks
+            app_alias=app_alias, stacks=stacks,
         )
 
         # Show layers that would be applied
@@ -147,38 +144,38 @@ class StatusCommand:
             available_apps = list(self.config.managed_apps.keys())
             raise VscSyncError(
                 f"App '{app_alias}' is not registered. "
-                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}"
+                f"Available apps: {', '.join(available_apps) if available_apps else 'none'}",
             )
 
         app_details = self.config.managed_apps[app_alias]
 
         if not app_details.config_path.exists():
             raise AppConfigPathError(
-                f"App config directory does not exist: {app_details.config_path}"
+                f"App config directory does not exist: {app_details.config_path}",
             )
 
         return app_details
 
     def _get_app_status_summary(
-        self, app_details: AppDetails, stacks: List[str]
+        self, app_details: AppDetails, stacks: List[str],
     ) -> Dict[str, str]:
         """Get a summary status for an app (for the overview table)."""
         try:
             merge_result = self.layer_manager.merge_layers(
-                app_alias=app_details.alias, stacks=stacks
+                app_alias=app_details.alias, stacks=stacks,
             )
 
             settings_status = self._get_settings_status(
-                app_details, merge_result.merged_settings
+                app_details, merge_result.merged_settings,
             )
             keybindings_status = self._get_keybindings_status(
-                app_details, merge_result.keybindings_source
+                app_details, merge_result.keybindings_source,
             )
             snippets_status = self._get_snippets_status(
-                app_details, merge_result.snippets_paths
+                app_details, merge_result.snippets_paths,
             )
             extensions_status = self._get_extensions_status(
-                app_details, merge_result.extensions
+                app_details, merge_result.extensions,
             )
 
             # Determine overall status
@@ -233,7 +230,7 @@ class StatusCommand:
             console.print(f"[bold]Stacks:[/bold] {', '.join(stacks)}")
 
     def _compare_configurations(
-        self, app_details: AppDetails, merge_result: MergeResult, stacks: List[str]
+        self, app_details: AppDetails, merge_result: MergeResult, stacks: List[str],
     ) -> None:
         """Compare current configuration with target configuration."""
         console.print("\n[bold]Configuration Status:[/bold]")
@@ -251,7 +248,7 @@ class StatusCommand:
         self._compare_extensions(app_details, merge_result.extensions, stacks)
 
     def _compare_settings(
-        self, app_details: AppDetails, target_settings: Dict, stacks: List[str] = None
+        self, app_details: AppDetails, target_settings: Dict, stacks: List[str] = None,
     ) -> None:
         """Compare current settings.json with target."""
         console.print("\n[bold cyan]Settings.json:[/bold cyan]")
@@ -261,11 +258,11 @@ class StatusCommand:
 
         if current_settings == target_settings:
             console.print(
-                "[green]✓ IN SYNC[/green] - Settings match target configuration"
+                "[green]✓ IN SYNC[/green] - Settings match target configuration",
             )
         else:
             console.print(
-                "[red]✗ OUT OF SYNC[/red] - Settings differ from target configuration"
+                "[red]✗ OUT OF SYNC[/red] - Settings differ from target configuration",
             )
 
             # Show detailed differences
@@ -324,20 +321,20 @@ class StatusCommand:
                 console.print(f"      ... and {len(removed) - 3} more")
 
     def _show_edit_suggestions_for_settings(
-        self, app_alias: str, stacks: List[str]
+        self, app_alias: str, stacks: List[str],
     ) -> None:
         """Show edit command suggestions for settings."""
         suggestions = self._generate_edit_suggestions(app_alias, stacks)
 
-        console.print(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        console.print("\n  [bold blue]💡 Quick fixes:[/bold blue]")
         console.print(
-            f"    Edit live app config:  [cyan]{suggestions['live_settings']}[/cyan]"
+            f"    Edit live app config:  [cyan]{suggestions['live_settings']}[/cyan]",
         )
         console.print(
-            f"    Edit app layer:        [cyan]{suggestions['app_settings']}[/cyan]"
+            f"    Edit app layer:        [cyan]{suggestions['app_settings']}[/cyan]",
         )
         console.print(
-            f"    Edit base layer:       [cyan]{suggestions['base_settings']}[/cyan]"
+            f"    Edit base layer:       [cyan]{suggestions['base_settings']}[/cyan]",
         )
 
         # Show stack suggestions if available
@@ -345,7 +342,7 @@ class StatusCommand:
             stack_key = f"stack_{stack}_settings"
             if stack_key in suggestions:
                 console.print(
-                    f"    Edit {stack} stack:       [cyan]{suggestions[stack_key]}[/cyan]"
+                    f"    Edit {stack} stack:       [cyan]{suggestions[stack_key]}[/cyan]",
                 )
 
     def _compare_keybindings(
@@ -367,48 +364,47 @@ class StatusCommand:
 
                 if current_content.strip() == target_content.strip():
                     console.print(
-                        "[green]✓ IN SYNC[/green] - Keybindings match target configuration"
+                        "[green]✓ IN SYNC[/green] - Keybindings match target configuration",
                     )
                 else:
                     console.print(
-                        "[red]✗ OUT OF SYNC[/red] - Keybindings differ from target configuration"
+                        "[red]✗ OUT OF SYNC[/red] - Keybindings differ from target configuration",
                     )
                     console.print(f"  Target source: {target_keybindings_source}")
                     out_of_sync = True
             else:
                 console.print(
-                    "[red]✗ MISSING[/red] - Target keybindings exist but current file is missing"
+                    "[red]✗ MISSING[/red] - Target keybindings exist but current file is missing",
                 )
                 console.print(f"  Target source: {target_keybindings_source}")
                 out_of_sync = True
+        elif current_keybindings_file.exists():
+            console.print(
+                "[yellow]⚠ EXTRA[/yellow] - Current keybindings exist but no target configuration",
+            )
+            out_of_sync = True
         else:
-            if current_keybindings_file.exists():
-                console.print(
-                    "[yellow]⚠ EXTRA[/yellow] - Current keybindings exist but no target configuration"
-                )
-                out_of_sync = True
-            else:
-                console.print("[green]✓ IN SYNC[/green] - No keybindings configuration")
+            console.print("[green]✓ IN SYNC[/green] - No keybindings configuration")
 
         # Show edit suggestions if out of sync
         if out_of_sync:
             self._show_edit_suggestions_for_keybindings(app_details.alias, stacks or [])
 
     def _show_edit_suggestions_for_keybindings(
-        self, app_alias: str, stacks: List[str]
+        self, app_alias: str, stacks: List[str],
     ) -> None:
         """Show edit command suggestions for keybindings."""
         suggestions = self._generate_edit_suggestions(app_alias, stacks)
 
-        console.print(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        console.print("\n  [bold blue]💡 Quick fixes:[/bold blue]")
         console.print(
-            f"    Edit live app config:  [cyan]{suggestions['live_keybindings']}[/cyan]"
+            f"    Edit live app config:  [cyan]{suggestions['live_keybindings']}[/cyan]",
         )
         console.print(
-            f"    Edit app layer:        [cyan]{suggestions['app_keybindings']}[/cyan]"
+            f"    Edit app layer:        [cyan]{suggestions['app_keybindings']}[/cyan]",
         )
         console.print(
-            f"    Edit base layer:       [cyan]{suggestions['base_keybindings']}[/cyan]"
+            f"    Edit base layer:       [cyan]{suggestions['base_keybindings']}[/cyan]",
         )
 
         # Show stack suggestions if available
@@ -416,7 +412,7 @@ class StatusCommand:
             stack_key = f"stack_{stack}_keybindings"
             if stack_key in suggestions:
                 console.print(
-                    f"    Edit {stack} stack:       [cyan]{suggestions[stack_key]}[/cyan]"
+                    f"    Edit {stack} stack:       [cyan]{suggestions[stack_key]}[/cyan]",
                 )
 
     def _compare_snippets(
@@ -433,17 +429,17 @@ class StatusCommand:
 
         if not target_snippets_paths:
             if app_snippets_dir.exists() and list(
-                app_snippets_dir.glob("*.code-snippets")
+                app_snippets_dir.glob("*.code-snippets"),
             ):
                 console.print(
-                    "[yellow]⚠ EXTRA[/yellow] - Current snippets exist but no target configuration"
+                    "[yellow]⚠ EXTRA[/yellow] - Current snippets exist but no target configuration",
                 )
                 out_of_sync = True
             else:
                 console.print("[green]✓ IN SYNC[/green] - No snippets configuration")
             if out_of_sync:
                 self._show_edit_suggestions_for_snippets(
-                    app_details.alias, stacks or []
+                    app_details.alias, stacks or [],
                 )
             return
 
@@ -462,15 +458,15 @@ class StatusCommand:
 
         # Compare
         missing_files = set(target_snippet_files.keys()) - set(
-            current_snippet_files.keys()
+            current_snippet_files.keys(),
         )
         extra_files = set(current_snippet_files.keys()) - set(
-            target_snippet_files.keys()
+            target_snippet_files.keys(),
         )
 
         different_files = []
         for filename in set(target_snippet_files.keys()) & set(
-            current_snippet_files.keys()
+            current_snippet_files.keys(),
         ):
             current_content = current_snippet_files[filename].read_text()
             target_content = target_snippet_files[filename].read_text()
@@ -479,26 +475,26 @@ class StatusCommand:
 
         if not missing_files and not extra_files and not different_files:
             console.print(
-                "[green]✓ IN SYNC[/green] - All snippets match target configuration"
+                "[green]✓ IN SYNC[/green] - All snippets match target configuration",
             )
         else:
             console.print(
-                "[red]✗ OUT OF SYNC[/red] - Snippets differ from target configuration"
+                "[red]✗ OUT OF SYNC[/red] - Snippets differ from target configuration",
             )
 
             if missing_files:
                 console.print(
-                    f"  [red]{len(missing_files)} missing files[/red]: {', '.join(sorted(missing_files))}"
+                    f"  [red]{len(missing_files)} missing files[/red]: {', '.join(sorted(missing_files))}",
                 )
 
             if different_files:
                 console.print(
-                    f"  [yellow]{len(different_files)} modified files[/yellow]: {', '.join(sorted(different_files))}"
+                    f"  [yellow]{len(different_files)} modified files[/yellow]: {', '.join(sorted(different_files))}",
                 )
 
             if extra_files:
                 console.print(
-                    f"  [blue]{len(extra_files)} extra files[/blue]: {', '.join(sorted(extra_files))}"
+                    f"  [blue]{len(extra_files)} extra files[/blue]: {', '.join(sorted(extra_files))}",
                 )
 
             # Show edit suggestions
@@ -530,16 +526,16 @@ class StatusCommand:
 
         if not missing_extensions and not extra_extensions:
             console.print(
-                "[green]✓ IN SYNC[/green] - All extensions match target configuration"
+                "[green]✓ IN SYNC[/green] - All extensions match target configuration",
             )
         else:
             console.print(
-                "[red]✗ OUT OF SYNC[/red] - Extensions differ from target configuration"
+                "[red]✗ OUT OF SYNC[/red] - Extensions differ from target configuration",
             )
 
             if missing_extensions:
                 console.print(
-                    f"  [red]{len(missing_extensions)} missing extensions[/red]:"
+                    f"  [red]{len(missing_extensions)} missing extensions[/red]:",
                 )
                 for ext in sorted(list(missing_extensions)[:5]):  # Show first 5
                     console.print(f"    - {ext}")
@@ -548,7 +544,7 @@ class StatusCommand:
 
             if extra_extensions:
                 console.print(
-                    f"  [blue]{len(extra_extensions)} extra extensions[/blue]:"
+                    f"  [blue]{len(extra_extensions)} extra extensions[/blue]:",
                 )
                 for ext in sorted(list(extra_extensions)[:5]):  # Show first 5
                     console.print(f"    + {ext}")
@@ -559,50 +555,50 @@ class StatusCommand:
             self._show_edit_suggestions_for_extensions(app_details.alias, stacks or [])
 
     def _show_edit_suggestions_for_snippets(
-        self, app_alias: str, stacks: List[str]
+        self, app_alias: str, stacks: List[str],
     ) -> None:
         """Show edit command suggestions for snippets."""
         suggestions = self._generate_edit_suggestions(app_alias, stacks)
 
-        console.print(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        console.print("\n  [bold blue]💡 Quick fixes:[/bold blue]")
         console.print(
-            f"    Edit live app snippets: [cyan]{suggestions['live_snippets']}[/cyan]"
+            f"    Edit live app snippets: [cyan]{suggestions['live_snippets']}[/cyan]",
         )
         console.print(
-            f"    Edit base snippets:     [cyan]vsc-sync edit base --file-type snippets[/cyan]"
+            "    Edit base snippets:     [cyan]vsc-sync edit base --file-type snippets[/cyan]",
         )
 
         # Show stack suggestions if available
         for stack in stacks:
             console.print(
-                f"    Edit {stack} snippets:     [cyan]vsc-sync edit stack {stack} --file-type snippets[/cyan]"
+                f"    Edit {stack} snippets:     [cyan]vsc-sync edit stack {stack} --file-type snippets[/cyan]",
             )
 
     def _show_edit_suggestions_for_extensions(
-        self, app_alias: str, stacks: List[str]
+        self, app_alias: str, stacks: List[str],
     ) -> None:
         """Show edit command suggestions for extensions."""
         suggestions = self._generate_edit_suggestions(app_alias, stacks)
 
-        console.print(f"\n  [bold blue]💡 Quick fixes:[/bold blue]")
+        console.print("\n  [bold blue]💡 Quick fixes:[/bold blue]")
         console.print(
-            f"    Edit live app config:   [cyan]{suggestions['live_extensions']}[/cyan]"
+            f"    Edit live app config:   [cyan]{suggestions['live_extensions']}[/cyan]",
         )
         console.print(
-            f"    Edit app layer:         [cyan]vsc-sync edit app {app_alias} --file-type extensions[/cyan]"
+            f"    Edit app layer:         [cyan]vsc-sync edit app {app_alias} --file-type extensions[/cyan]",
         )
         console.print(
-            f"    Edit base layer:        [cyan]vsc-sync edit base --file-type extensions[/cyan]"
+            "    Edit base layer:        [cyan]vsc-sync edit base --file-type extensions[/cyan]",
         )
 
         # Show stack suggestions if available
         for stack in stacks:
             console.print(
-                f"    Edit {stack} stack:        [cyan]vsc-sync edit stack {stack} --file-type extensions[/cyan]"
+                f"    Edit {stack} stack:        [cyan]vsc-sync edit stack {stack} --file-type extensions[/cyan]",
             )
 
     def _get_settings_status(
-        self, app_details: AppDetails, target_settings: Dict
+        self, app_details: AppDetails, target_settings: Dict,
     ) -> str:
         """Get settings status for summary table."""
         current_settings_file = app_details.config_path / "settings.json"
@@ -610,11 +606,10 @@ class StatusCommand:
 
         if current_settings == target_settings:
             return "[green]IN SYNC[/green]"
-        else:
-            return "[red]OUT OF SYNC[/red]"
+        return "[red]OUT OF SYNC[/red]"
 
     def _get_keybindings_status(
-        self, app_details: AppDetails, target_keybindings_source: Optional[Path]
+        self, app_details: AppDetails, target_keybindings_source: Optional[Path],
     ) -> str:
         """Get keybindings status for summary table."""
         current_keybindings_file = app_details.config_path / "keybindings.json"
@@ -626,29 +621,24 @@ class StatusCommand:
 
                 if current_content.strip() == target_content.strip():
                     return "[green]IN SYNC[/green]"
-                else:
-                    return "[red]OUT OF SYNC[/red]"
-            else:
-                return "[red]MISSING[/red]"
-        else:
-            if current_keybindings_file.exists():
-                return "[yellow]EXTRA[/yellow]"
-            else:
-                return "[green]IN SYNC[/green]"
+                return "[red]OUT OF SYNC[/red]"
+            return "[red]MISSING[/red]"
+        if current_keybindings_file.exists():
+            return "[yellow]EXTRA[/yellow]"
+        return "[green]IN SYNC[/green]"
 
     def _get_snippets_status(
-        self, app_details: AppDetails, target_snippets_paths: List[Path]
+        self, app_details: AppDetails, target_snippets_paths: List[Path],
     ) -> str:
         """Get snippets status for summary table."""
         app_snippets_dir = app_details.config_path / "snippets"
 
         if not target_snippets_paths:
             if app_snippets_dir.exists() and list(
-                app_snippets_dir.glob("*.code-snippets")
+                app_snippets_dir.glob("*.code-snippets"),
             ):
                 return "[yellow]EXTRA[/yellow]"
-            else:
-                return "[green]IN SYNC[/green]"
+            return "[green]IN SYNC[/green]"
 
         # Quick check for snippets sync
         target_snippet_files = set()
@@ -664,11 +654,10 @@ class StatusCommand:
 
         if target_snippet_files == current_snippet_files:
             return "[green]IN SYNC[/green]"
-        else:
-            return "[red]OUT OF SYNC[/red]"
+        return "[red]OUT OF SYNC[/red]"
 
     def _get_extensions_status(
-        self, app_details: AppDetails, target_extensions: List[str]
+        self, app_details: AppDetails, target_extensions: List[str],
     ) -> str:
         """Get extensions status for summary table."""
         if not target_extensions:
@@ -680,7 +669,6 @@ class StatusCommand:
 
             if current_extensions == target_extensions_set:
                 return "[green]IN SYNC[/green]"
-            else:
-                return "[red]OUT OF SYNC[/red]"
+            return "[red]OUT OF SYNC[/red]"
         except ExtensionError:
             return "[yellow]UNKNOWN[/yellow]"

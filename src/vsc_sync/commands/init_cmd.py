@@ -26,7 +26,7 @@ class InitCommand:
         self.config_manager = config_manager
 
     def run(
-        self, repo: Optional[str] = None, config_file: Optional[str] = None
+        self, repo: Optional[str] = None, config_file: Optional[str] = None,
     ) -> None:
         """Execute the init command."""
         console.print("[bold blue]Initializing vsc-sync...[/bold blue]")
@@ -35,7 +35,7 @@ class InitCommand:
         if self.config_manager.is_initialized():
             console.print("[yellow]vsc-sync is already initialized.[/yellow]")
             if not Confirm.ask(
-                "Do you want to reinitialize? This will overwrite your current configuration"
+                "Do you want to reinitialize? This will overwrite your current configuration",
             ):
                 console.print("Initialization cancelled.")
                 return
@@ -44,7 +44,7 @@ class InitCommand:
             # Step 1: Set up configuration file path
             config_path = self._setup_config_path(config_file)
             console.print(
-                f"Configuration will be stored at: [cyan]{config_path}[/cyan]"
+                f"Configuration will be stored at: [cyan]{config_path}[/cyan]",
             )
 
             # Step 2: Set up vscode-configs repository
@@ -55,7 +55,7 @@ class InitCommand:
 
             # Step 4: Create and save configuration
             config = VscSyncConfig(
-                vscode_configs_path=vscode_configs_path, managed_apps=managed_apps
+                vscode_configs_path=vscode_configs_path, managed_apps=managed_apps,
             )
 
             # Update config manager with new path if provided
@@ -64,7 +64,10 @@ class InitCommand:
 
             self.config_manager.save_config(config)
 
-            # Step 5: Success message and next steps
+            # Step 5: Set up TOML configuration for intelligent layer resolution
+            self._setup_toml_config(vscode_configs_path)
+
+            # Step 6: Success message and next steps
             self._show_success_message(config)
 
         except Exception as e:
@@ -84,36 +87,34 @@ class InitCommand:
 
         if repo:
             return self._handle_repo_argument(repo)
-        else:
-            return self._prompt_for_repo()
+        return self._prompt_for_repo()
 
     def _handle_repo_argument(self, repo: str) -> Path:
         """Handle the --repo argument."""
         # Check if it's a URL or local path
         if repo.startswith(("http://", "https://", "git@")):
             return self._clone_repository(repo)
-        else:
-            return self._verify_local_repo(repo)
+        return self._verify_local_repo(repo)
 
     def _clone_repository(self, repo_url: str) -> Path:
         """Clone a remote repository."""
         if not GitOperations.is_git_available():
             raise VscSyncError(
-                "Git support is not available. Please install GitPython: pip install gitpython"
+                "Git support is not available. Please install GitPython: pip install gitpython",
             )
 
         # Default clone location
         default_path = Path.home() / "vscode-configs"
 
         clone_path = Prompt.ask(
-            f"Where should the repository be cloned?", default=str(default_path)
+            "Where should the repository be cloned?", default=str(default_path),
         )
 
         clone_path = resolve_path(clone_path)
 
         if clone_path.exists():
             if not Confirm.ask(
-                f"Directory {clone_path} already exists. Remove it and clone fresh?"
+                f"Directory {clone_path} already exists. Remove it and clone fresh?",
             ):
                 raise VscSyncError("Cannot clone to existing directory")
 
@@ -147,7 +148,7 @@ class InitCommand:
 
         if missing_dirs:
             console.print(
-                f"[yellow]Warning: Directory structure looks incomplete.[/yellow]"
+                "[yellow]Warning: Directory structure looks incomplete.[/yellow]",
             )
             console.print(f"Missing directories: {', '.join(missing_dirs)}")
 
@@ -170,19 +171,19 @@ class InitCommand:
             repo_url = Prompt.ask("Enter Git repository URL")
             return self._clone_repository(repo_url)
 
-        elif choice == "2":
+        if choice == "2":
             repo_path = Prompt.ask("Enter local directory path")
             return self._verify_local_repo(repo_path)
 
-        else:  # choice == "3"
-            return self._create_new_repo()
+        # choice == "3"
+        return self._create_new_repo()
 
     def _create_new_repo(self) -> Path:
         """Create a new vscode-configs repository."""
         default_path = Path.home() / "vscode-configs"
 
         repo_path = Prompt.ask(
-            "Where should the new repository be created?", default=str(default_path)
+            "Where should the new repository be created?", default=str(default_path),
         )
 
         repo_path = resolve_path(repo_path)
@@ -192,18 +193,18 @@ class InitCommand:
                 raise VscSyncError("Cannot create repository at existing location")
 
         console.print(
-            f"Creating new repository structure at [cyan]{repo_path}[/cyan]..."
+            f"Creating new repository structure at [cyan]{repo_path}[/cyan]...",
         )
 
         # Create directory structure
         self._create_repo_structure(repo_path)
 
         console.print("[green]Repository structure created successfully![/green]")
-        console.print(f"[yellow]Tip:[/yellow] Initialize this as a Git repository:")
+        console.print("[yellow]Tip:[/yellow] Initialize this as a Git repository:")
         console.print(f"  cd {repo_path}")
-        console.print(f"  git init")
-        console.print(f"  git add .")
-        console.print(f'  git commit -m "Initial vscode-configs repository"')
+        console.print("  git init")
+        console.print("  git add .")
+        console.print('  git commit -m "Initial vscode-configs repository"')
 
         return repo_path
 
@@ -231,13 +232,13 @@ class InitCommand:
         base_keybindings = []
 
         FileOperations.write_json_file(
-            repo_path / "base" / "settings.json", base_settings
+            repo_path / "base" / "settings.json", base_settings,
         )
         FileOperations.write_json_file(
-            repo_path / "base" / "extensions.json", base_extensions
+            repo_path / "base" / "extensions.json", base_extensions,
         )
         FileOperations.write_json_file(
-            repo_path / "base" / "keybindings.json", base_keybindings
+            repo_path / "base" / "keybindings.json", base_keybindings,
         )
 
         # Create README
@@ -309,13 +310,13 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
         console.print(table)
 
     def _review_discovered_apps(
-        self, discovered_apps: Dict[str, AppDetails]
+        self, discovered_apps: Dict[str, AppDetails],
     ) -> Dict[str, AppDetails]:
         """Let user review and modify the discovered applications."""
         console.print("\n[bold]Review discovered applications:[/bold]")
 
         if not Confirm.ask(
-            "Do you want to review each application individually?", default=False
+            "Do you want to review each application individually?", default=False,
         ):
             # Use all discovered apps as-is
             selected_apps = {
@@ -326,7 +327,7 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
             if selected_apps != discovered_apps:
                 console.print(
-                    "Only including applications with existing config directories."
+                    "Only including applications with existing config directories.",
                 )
 
             return self._maybe_add_more_apps(selected_apps)
@@ -341,7 +342,7 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
             if not app_details.config_path.exists():
                 console.print(
-                    "[yellow]Warning: Config directory doesn't exist[/yellow]"
+                    "[yellow]Warning: Config directory doesn't exist[/yellow]",
                 )
 
             action = Prompt.ask(
@@ -352,9 +353,9 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
             if action == "quit":
                 break
-            elif action == "skip":
+            if action == "skip":
                 continue
-            elif action == "include":
+            if action == "include":
                 selected_apps[alias] = app_details
             elif action == "modify":
                 modified_app = self._modify_app_details(alias, app_details)
@@ -364,14 +365,14 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
         return self._maybe_add_more_apps(selected_apps)
 
     def _modify_app_details(
-        self, alias: str, app_details: AppDetails
+        self, alias: str, app_details: AppDetails,
     ) -> Optional[AppDetails]:
         """Allow user to modify application details."""
         console.print(f"Modifying application: {alias}")
 
         new_alias = Prompt.ask("Alias", default=alias)
         new_config_path = Prompt.ask(
-            "Config Path", default=str(app_details.config_path)
+            "Config Path", default=str(app_details.config_path),
         )
         new_executable = Prompt.ask(
             "Executable Path (press Enter for none)",
@@ -386,7 +387,7 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
             if not AppManager.validate_app_config_path(config_path):
                 console.print(
-                    "[yellow]Warning: Path doesn't look like a VSCode config directory[/yellow]"
+                    "[yellow]Warning: Path doesn't look like a VSCode config directory[/yellow]",
                 )
                 if not Confirm.ask("Continue anyway?"):
                     return None
@@ -402,18 +403,18 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
             return None
 
     def _maybe_add_more_apps(
-        self, selected_apps: Dict[str, AppDetails]
+        self, selected_apps: Dict[str, AppDetails],
     ) -> Dict[str, AppDetails]:
         """Ask if user wants to add more applications manually."""
         if Confirm.ask(
-            "Do you want to add any additional applications manually?", default=False
+            "Do you want to add any additional applications manually?", default=False,
         ):
             return self._manually_add_apps(selected_apps)
 
         return selected_apps
 
     def _manually_add_apps(
-        self, existing_apps: Dict[str, AppDetails]
+        self, existing_apps: Dict[str, AppDetails],
     ) -> Dict[str, AppDetails]:
         """Manually add applications."""
         apps = existing_apps.copy()
@@ -429,7 +430,7 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
             config_path_str = Prompt.ask("Config directory path")
             executable_path_str = Prompt.ask(
-                "Executable path (press Enter for none)", default=""
+                "Executable path (press Enter for none)", default="",
             )
 
             try:
@@ -440,7 +441,7 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
 
                 if not config_path.exists():
                     console.print(
-                        "[yellow]Warning: Config directory doesn't exist[/yellow]"
+                        "[yellow]Warning: Config directory doesn't exist[/yellow]",
                     )
                     if not Confirm.ask("Continue anyway?"):
                         continue
@@ -467,34 +468,34 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
         console.print("\n[bold green]✓ vsc-sync initialization completed![/bold green]")
 
         console.print(
-            f"\n[bold]Configuration saved to:[/bold] [cyan]{self.config_manager.config_path}[/cyan]"
+            f"\n[bold]Configuration saved to:[/bold] [cyan]{self.config_manager.config_path}[/cyan]",
         )
         console.print(
-            f"[bold]VSCode configs repository:[/bold] [cyan]{config.vscode_configs_path}[/cyan]"
+            f"[bold]VSCode configs repository:[/bold] [cyan]{config.vscode_configs_path}[/cyan]",
         )
         console.print(f"[bold]Managed applications:[/bold] {len(config.managed_apps)}")
 
         if config.managed_apps:
             console.print("\n[bold]Next steps:[/bold]")
             console.print(
-                "• Use [cyan]vsc-sync list-apps[/cyan] to see your registered applications"
+                "• Use [cyan]vsc-sync list-apps[/cyan] to see your registered applications",
             )
             console.print(
-                "• Use [cyan]vsc-sync apply <app> --stack <stack>[/cyan] to apply configurations"
+                "• Use [cyan]vsc-sync apply <app> --stack <stack>[/cyan] to apply configurations",
             )
             console.print(
-                "• Use [cyan]vsc-sync discover[/cyan] to find more applications"
+                "• Use [cyan]vsc-sync discover[/cyan] to find more applications",
             )
 
             # Show example commands
             first_app = next(iter(config.managed_apps.keys()))
-            console.print(f"\n[bold]Example:[/bold]")
+            console.print("\n[bold]Example:[/bold]")
             console.print(f"  vsc-sync apply {first_app} --stack python")
 
         # Advice about version control
         if not self._is_in_dotfiles_location(self.config_manager.config_path):
             console.print(
-                f"\n[yellow]Tip:[/yellow] Consider adding your configuration file to version control:"
+                "\n[yellow]Tip:[/yellow] Consider adding your configuration file to version control:",
             )
             console.print(f"  {self.config_manager.config_path}")
 
@@ -507,3 +508,95 @@ Use the `vsc-sync` CLI tool to apply these configurations to your editors.
                 return True
 
         return False
+
+    def _setup_toml_config(self, vscode_configs_path: Path) -> None:
+        """Set up TOML configuration for intelligent layer resolution."""
+        console.print("\n[bold]Setting up intelligent layer resolution...[/bold]")
+        
+        try:
+            from ..config_toml import TomlConfigManager
+            
+            toml_manager = TomlConfigManager()
+            
+            # Check if TOML config already exists
+            if toml_manager.config_exists():
+                console.print(f"[yellow]TOML config already exists at {toml_manager.config_path}[/yellow]")
+                
+                if Confirm.ask("Do you want to update the vscode_configs_path in your existing TOML config?", default=True):
+                    # Load existing config and update the path
+                    existing_config = toml_manager.load_config()
+                    existing_config.vscode_configs_path = vscode_configs_path
+                    toml_manager.save_config(existing_config)
+                    console.print(f"[green]✓[/green] Updated vscode_configs_path in existing TOML config")
+                else:
+                    console.print("[dim]Skipped TOML config setup[/dim]")
+                return
+            
+            # Ask user if they want to set up TOML config
+            if not Confirm.ask(
+                "Do you want to set up intelligent layer resolution? "
+                "This allows you to use simple names like 'base', 'python', 'vscode' instead of full paths",
+                default=True
+            ):
+                console.print("[dim]Skipped TOML config setup[/dim]")
+                return
+            
+            # Ask for custom vscode_configs_path if they want to override
+            suggested_path = str(vscode_configs_path)
+            console.print(f"\n[bold]VSCode Configs Path Setup[/bold]")
+            console.print(f"Default path: [cyan]{suggested_path}[/cyan]")
+            
+            use_custom_path = Confirm.ask(
+                "Do you want to use a different path for intelligent layer resolution?",
+                default=False
+            )
+            
+            final_path = vscode_configs_path
+            if use_custom_path:
+                while True:
+                    custom_path_str = Prompt.ask(
+                        "Enter the path to your vscode-configs repository",
+                        default=suggested_path
+                    )
+                    
+                    custom_path = resolve_path(custom_path_str)
+                    
+                    # Validate the path
+                    if custom_path.exists() and custom_path.is_dir():
+                        final_path = custom_path
+                        break
+                    elif custom_path == vscode_configs_path:
+                        # User kept the default, which we know is valid
+                        break
+                    else:
+                        console.print(f"[red]Path does not exist or is not a directory: {custom_path}[/red]")
+                        if not Confirm.ask("Try a different path?", default=True):
+                            final_path = vscode_configs_path  # Fall back to default
+                            break
+            
+            # Create TOML config with intelligent resolution enabled
+            example_config = toml_manager.create_example_config()
+            example_config.vscode_configs_path = final_path
+            
+            # Save the config
+            toml_manager.save_config(example_config)
+            
+            console.print(f"[green]✓[/green] Created TOML config at [cyan]{toml_manager.config_path}[/cyan]")
+            console.print(f"[green]✓[/green] Intelligent layer resolution enabled for: [cyan]{final_path}[/cyan]")
+            
+            # Show what this enables
+            console.print("\n[bold]What this enables:[/bold]")
+            console.print("• Use short names: [cyan]--layer0 base --layer1 python --layer2 vscode[/cyan]")
+            console.print("• Instead of full paths: [dim]--layer0 ~/vscode-configs/base --layer1 ~/vscode-configs/stacks/python[/dim]")
+            console.print("• Automatic discovery in: base/, apps/, stacks/, projects/")
+            
+            # Suggest next steps
+            console.print(f"\n[bold]Next steps for TOML config:[/bold]")
+            console.print(f"• Edit config: [cyan]vsc-sync config --edit[/cyan]")
+            console.print(f"• View config: [cyan]vsc-sync config --show[/cyan]")
+            console.print(f"• Customize layer aliases and presets in the TOML file")
+            
+        except Exception as e:
+            console.print(f"[yellow]Warning: Failed to set up TOML config: {e}[/yellow]")
+            console.print("[dim]You can set it up later with: vsc-sync config --init[/dim]")
+            logger.debug(f"TOML config setup failed: {e}", exc_info=True)

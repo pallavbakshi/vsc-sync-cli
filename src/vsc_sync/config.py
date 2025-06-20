@@ -24,12 +24,12 @@ class ConfigManager:
         if not self.config_path.exists():
             logger.info("No configuration file found, creating default config")
             self._config = VscSyncConfig(
-                vscode_configs_path=Path.home() / "vscode-configs", managed_apps={}
+                vscode_configs_path=Path.home() / "vscode-configs", managed_apps={},
             )
             return self._config
 
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 config_data = json.load(f)
 
             self._config = VscSyncConfig(**config_data)
@@ -38,7 +38,7 @@ class ConfigManager:
 
         except Exception as e:
             raise ConfigError(
-                f"Failed to load configuration from {self.config_path}: {e}"
+                f"Failed to load configuration from {self.config_path}: {e}",
             )
 
     def save_config(self, config: Optional[VscSyncConfig] = None) -> None:
@@ -63,7 +63,7 @@ class ConfigManager:
 
         except Exception as e:
             raise ConfigError(
-                f"Failed to save configuration to {self.config_path}: {e}"
+                f"Failed to save configuration to {self.config_path}: {e}",
             )
 
     @property
