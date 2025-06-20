@@ -68,7 +68,8 @@ class MergeResult(BaseModel):
     """Result of merging configuration layers."""
 
     merged_settings: Dict[str, Any] = Field(default_factory=dict)
-    keybindings_source: Optional[Path] = Field(None)
+    keybindings_source: Optional[Path] = Field(None)  # Keep for backward compatibility
+    merged_keybindings: List[Dict[str, Any]] = Field(default_factory=list)  # New merged keybindings
     tasks_source: Optional[Path] = Field(None)
     extensions: List[str] = Field(default_factory=list)
     snippets_paths: List[Path] = Field(default_factory=list)

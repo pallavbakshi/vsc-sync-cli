@@ -258,7 +258,7 @@ class ApplyCommand:
             self._show_settings_diff(app_details, merge_result.merged_settings)
 
         if include_keybindings:
-            self._show_keybindings_diff(app_details, merge_result.keybindings_source)
+            self._show_keybindings_diff(app_details, merge_result.merged_keybindings)
 
         if include_snippets:
             self._show_snippets_diff(app_details, merge_result.snippets_paths)
@@ -341,30 +341,29 @@ class ApplyCommand:
                 console.print(f"  - {key}: {current_flat[key]}")
 
     def _show_keybindings_diff(
-        self, app_details: AppDetails, keybindings_source: Optional[Path],
+        self, app_details: AppDetails, merged_keybindings: List[Dict],
     ) -> None:
         """Show keybindings.json changes."""
         console.print("\n[bold]Keybindings.json changes:[/bold]")
 
         current_keybindings_file = app_details.config_path / "keybindings.json"
 
-        if keybindings_source:
-            if current_keybindings_file.exists():
-                current_content = current_keybindings_file.read_text()
-                new_content = keybindings_source.read_text()
-
-                if current_content == new_content:
-                    console.print("[green]No changes needed[/green]")
-                else:
-                    console.print(
-                        f"[yellow]Will replace with:[/yellow] {keybindings_source}",
-                    )
+        if merged_keybindings:
+            current_keybindings = FileOperations.read_json_file(current_keybindings_file)
+            
+            if current_keybindings == merged_keybindings:
+                console.print("[green]No changes needed[/green]")
             else:
-                console.print(f"[green]Will create from:[/green] {keybindings_source}")
-        elif current_keybindings_file.exists():
-            console.print("[dim]Will keep existing keybindings.json[/dim]")
+                console.print(
+                    f"[yellow]Will write merged keybindings ([cyan]{len(merged_keybindings)} entries[/cyan])[/yellow]"
+                )
+                
+                # Show count from each layer if possible
+                current_count = len(current_keybindings) if isinstance(current_keybindings, list) else 0
+                console.print(f"  Current: {current_count} keybindings")
+                console.print(f"  New: {len(merged_keybindings)} keybindings (merged from all layers)")
         else:
-            console.print("[dim]No keybindings.json to apply[/dim]")
+            console.print("[dim]No keybindings to apply[/dim]")
 
     def _show_tasks_diff(
         self, app_details: AppDetails, tasks_source: Optional[Path],
@@ -510,7 +509,7 @@ class ApplyCommand:
         changes_summary: List[str] = []
         if include_settings and merge_result.merged_settings:
             changes_summary.append("settings.json")
-        if include_keybindings and merge_result.keybindings_source:
+        if include_keybindings and merge_result.merged_keybindings:
             changes_summary.append("keybindings.json")
         if include_snippets and merge_result.snippets_paths:
             changes_summary.append("snippets")
@@ -566,8 +565,8 @@ class ApplyCommand:
             self._apply_settings(app_details, merge_result.merged_settings)
 
         # Apply keybindings.json
-        if include_keybindings and merge_result.keybindings_source:
-            self._apply_keybindings(app_details, merge_result.keybindings_source)
+        if include_keybindings and merge_result.merged_keybindings:
+            self._apply_keybindings(app_details, merge_result.merged_keybindings)
 
         # Apply tasks.json
         if tasks_enabled and merge_result.tasks_source:
@@ -604,13 +603,13 @@ class ApplyCommand:
         console.print("[green]✓[/green] Settings applied")
 
     def _apply_keybindings(
-        self, app_details: AppDetails, keybindings_source: Path,
+        self, app_details: AppDetails, merged_keybindings: List[Dict],
     ) -> None:
-        """Apply keybindings.json."""
+        """Apply merged keybindings.json."""
         keybindings_file = app_details.config_path / "keybindings.json"
         console.print("[cyan]Writing keybindings.json...[/cyan]")
 
-        FileOperations.copy_file(keybindings_source, keybindings_file)
+        FileOperations.write_json_file(keybindings_file, merged_keybindings)
         console.print("[green]✓[/green] Keybindings applied")
 
     def _apply_snippets(
@@ -761,7 +760,7 @@ class ApplyCommand:
         applied_components: List[str] = []
         if include_settings and merge_result.merged_settings:
             applied_components.append("settings")
-        if include_keybindings and merge_result.keybindings_source:
+        if include_keybindings and merge_result.merged_keybindings:
             applied_components.append("keybindings")
         if include_snippets and merge_result.snippets_paths:
             applied_components.append("snippets")

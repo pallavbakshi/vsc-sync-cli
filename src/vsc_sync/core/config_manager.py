@@ -108,6 +108,24 @@ class LayerConfigManager:
 
         return None
 
+    def merge_keybindings(self, layers: List[LayerInfo]) -> List[Dict]:
+        """Merge keybindings from all layers, base first, then more specific layers."""
+        merged_keybindings = []
+        
+        # Process layers in order (base first, then more specific)
+        for layer in layers:
+            keybindings_file = layer.path / "keybindings.json"
+            if keybindings_file.exists():
+                try:
+                    layer_keybindings = self.load_json_file(keybindings_file)
+                    if isinstance(layer_keybindings, list):
+                        merged_keybindings.extend(layer_keybindings)
+                        logger.debug(f"Added {len(layer_keybindings)} keybindings from {layer.layer_type}/{layer.layer_name or 'base'}")
+                except Exception as e:
+                    logger.warning(f"Failed to load keybindings from {keybindings_file}: {e}")
+        
+        return merged_keybindings
+
     def find_tasks_file(self, layers: List[LayerInfo]) -> Optional[Path]:
         """Find tasks.json from the most specific layer that has it."""
         # Check layers in reverse precedence (most specific first)
@@ -176,13 +194,15 @@ class LayerConfigManager:
 
         # Collect other components
         extensions = self.collect_extensions(layers)
-        keybindings_source = self.find_keybindings(layers)
+        keybindings_source = self.find_keybindings(layers)  # Keep for backward compatibility
+        merged_keybindings = self.merge_keybindings(layers)  # New merged approach
         snippets_paths = self.collect_snippets(layers)
         tasks_source = self.find_tasks_file(layers)
 
         return MergeResult(
             merged_settings=merged_settings,
             keybindings_source=keybindings_source,
+            merged_keybindings=merged_keybindings,
             tasks_source=tasks_source,
             extensions=extensions,
             snippets_paths=snippets_paths,
