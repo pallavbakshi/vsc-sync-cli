@@ -284,18 +284,25 @@ class AppManager:
                     capture_output=True,
                     text=True,
                     check=True,
-                    timeout=30,
+                    timeout=120,  # 2 minutes for local VSIX (includes compilation)
                 )
                 logger.debug(f"Installed extension {extension_id} from local VSIX for {app_details.alias}")
             else:
                 # Install from marketplace
                 logger.info(f"Installing {extension_id} from marketplace")
+                # Allow a more generous timeout when installing directly from the
+                # marketplace.  Large extensions or a slow internet connection
+                # can easily exceed the previous hard-coded 10 second window,
+                # causing legitimate installs to fail spuriously.  We therefore
+                # increase the timeout to 30 seconds which offers a better
+                # balance between responsiveness and robustness.
+
                 result = subprocess.run(
                     [str(app_details.executable_path), "--install-extension", extension_id],
                     capture_output=True,
                     text=True,
                     check=True,
-                    timeout=10,
+                    timeout=30,
                 )
                 logger.debug(f"Installed extension {extension_id} from marketplace for {app_details.alias}")
 

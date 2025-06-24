@@ -56,17 +56,33 @@ class LayerConfigManager:
     def deep_merge_dicts(
         self, base: Dict[str, Any], override: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Deep merge two dictionaries, with override taking precedence."""
-        result = base.copy()
+        """Deep-merge two dictionaries while preserving VSCode "last key wins" ordering.
+
+        * Keys from *base* are copied first.
+        * For each key in *override*:
+            – If both values are dictionaries we recurse.
+            – Otherwise the *override* value should win.
+
+        To mimic VSCode's behaviour (where the *last* occurrence of a setting
+        in the same file wins) we re-insert overridden keys at the end of the
+        resulting OrderedDict.  Regular ``dict`` preserves insertion order in
+        Python ≥ 3.7, so a pop / re-assign dance is enough.
+        """
+
+        # We rely on insertion-order preservation, guaranteed since CPython 3.7.
+        result: Dict[str, Any] = base.copy()
 
         for key, value in override.items():
-            if (
-                key in result
-                and isinstance(result[key], dict)
-                and isinstance(value, dict)
-            ):
-                result[key] = self.deep_merge_dicts(result[key], value)
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                # Deep merge nested dictionaries first
+                merged_nested = self.deep_merge_dicts(result[key], value)
+                # Re-insert to move the key to the end (higher precedence)
+                result.pop(key)
+                result[key] = merged_nested
             else:
+                # Remove any existing key so that the new value ends up last
+                if key in result:
+                    result.pop(key)
                 result[key] = value
 
         return result

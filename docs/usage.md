@@ -56,6 +56,23 @@ vsc-sync apply vscode --all               # All components
 vsc-sync apply vscode --config            # settings + keybindings + tasks (no extensions/snippets)
 ```
 
+### Safe Preview with `--dry-run`
+
+Unsure about the outcome?  Append `--dry-run` to **any** apply command:
+
+```
+vsc-sync apply cursor --all --layer base --layer cursor --layer python --remove-extra --dry-run
+```
+
+What you get:
+
+* A coloured diff/preview of the final **settings.json**, **keybindings.json**,
+  **tasks.json**, and which snippet files would be copied.  
+* An extension summary (to-install / to-uninstall / already present).  
+* **Nothing is written** – ideal for PR reviews or first-time rolls-outs.
+
+Pair this with the interactive extension prompt for maximum safety.
+
 ### Layer System
 
 #### Standard Layers (Traditional)
@@ -63,6 +80,17 @@ vsc-sync apply vscode --config            # settings + keybindings + tasks (no e
 # Apply with tech stacks
 vsc-sync apply vscode --settings --stack python --stack web
 ```
+
+### How settings are merged  *(new)*
+
+`settings.json` from **all** layers are _deep-merged_.  Every key that appears in
+any layer ends up in the final file; when the same key exists in multiple
+layers the value from the _later_ layer overrides those before it.  The final
+file is written so that higher-precedence keys appear **later in the file** –
+exactly how VS Code itself resolves duplicates (“last key wins”).
+
+Keybindings are still concatenated (base first → top layer) and extensions are
+union-deduplicated.
 
 #### Custom Layers (New & Powerful)
 ```bash
@@ -125,6 +153,24 @@ When marketplace installation fails, vsc-sync automatically searches `~/Document
 Supported filename patterns:
 - `publisher.extension.vsix`
 - `publisher.extension-version.vsix`
+
+**Installation Timeouts:**
+- **Marketplace**: 30 seconds (download only)  
+  (increased from 10 s to accommodate slower connections and large extensions)
+- **Local VSIX**: 2 minutes (includes compilation and installation)
+
+**Interactive safety prompt**  *(new in vsc-sync ≥ x.y.z)*
+
+After showing the planned install/uninstall list vsc-sync now asks:
+
+```
+Proceed with installing/uninstalling these extensions? (Y/n)
+```
+
+• Reply **Y** (default) → extensions are managed as usual.  
+• Reply **n** → extension step is skipped, while all other components
+  (settings, keybindings, snippets, tasks) remain applied.  
+• Use `--force` to bypass the prompt in automation/CI.
 
 ---
 

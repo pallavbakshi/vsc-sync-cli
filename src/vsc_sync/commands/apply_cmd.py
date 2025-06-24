@@ -121,6 +121,7 @@ class ApplyCommand:
                     include_keybindings,
                     include_extensions,
                     include_snippets,
+                    force=force,
                 )
                 self._show_success_message(
                     app_details,
@@ -267,7 +268,9 @@ class ApplyCommand:
             
             # Show merge precedence explanation
             console.print(f"\n[bold yellow]Layer Precedence:[/bold yellow]")
-            console.print("• Settings: Later layers override earlier layers")
+            console.print(
+                "• Settings: All layers merged together (base first, then stacked; later layers override duplicate keys)",
+            )
             console.print("• Keybindings: All layers merged together (base first, then stacked)")
             console.print("• Extensions: All layers combined and deduplicated")
             console.print("• Snippets: All layers copied (later layers can override same filenames)")
@@ -407,13 +410,20 @@ class ApplyCommand:
                 console.print("[green]No changes needed[/green]")
             else:
                 console.print(
-                    f"[yellow]Will write merged keybindings ([cyan]{len(merged_keybindings)} entries[/cyan])[/yellow]",
+                    f"[yellow]Keybindings will be updated (total [cyan]{len(merged_keybindings)} entries[/cyan])[/yellow]",
                 )
 
-                # Show count from each layer if possible
-                current_count = len(current_keybindings) if isinstance(current_keybindings, list) else 0
-                console.print(f"  Current: {current_count} keybindings")
-                console.print(f"  New: {len(merged_keybindings)} keybindings (merged from all layers)")
+                # Show current keybindings JSON (if any)
+                if current_keybindings:
+                    console.print("[dim]Current keybindings:[/dim]")
+                    current_json = json.dumps(current_keybindings, indent=2, sort_keys=False)
+                    console.print(
+                        Syntax(current_json, "json", line_numbers=False, theme="monokai"),
+                    )
+
+                console.print("[dim]New keybindings:[/dim]")
+                new_json = json.dumps(merged_keybindings, indent=2, sort_keys=False)
+                console.print(Syntax(new_json, "json", line_numbers=False, theme="monokai"))
         else:
             console.print("[dim]No keybindings to apply[/dim]")
 
@@ -433,9 +443,25 @@ class ApplyCommand:
                 if current_content == new_content:
                     console.print("[green]No changes needed[/green]")
                 else:
-                    console.print(f"[yellow]Will replace with:[/yellow] {tasks_source}")
+                    console.print(f"[yellow]Tasks will be updated from:[/yellow] {tasks_source}")
+
+                    console.print("[dim]Current tasks.json:[/dim]")
+                    console.print(
+                        Syntax(current_content, "json", line_numbers=False, theme="monokai"),
+                    )
+
+                    console.print("[dim]New tasks.json:[/dim]")
+                    console.print(
+                        Syntax(new_content, "json", line_numbers=False, theme="monokai"),
+                    )
             else:
-                console.print(f"[green]Will create from:[/green] {tasks_source}")
+                console.print(f"[green]Will create tasks.json from:[/green] {tasks_source}")
+
+                new_content = tasks_source.read_text()
+                console.print("[dim]New tasks.json:[/dim]")
+                console.print(
+                    Syntax(new_content, "json", line_numbers=False, theme="monokai"),
+                )
         elif current_tasks_file.exists():
             console.print("[dim]Will keep existing tasks.json[/dim]")
         else:
@@ -475,6 +501,8 @@ class ApplyCommand:
         target_extensions: List[str],
         prune_extensions: bool,
         clean_extensions: bool = False,
+        *,
+        force: bool = False,
     ) -> None:
         """Show extension changes."""
         console.print("\n[bold]Extensions changes:[/bold]")
@@ -608,6 +636,8 @@ class ApplyCommand:
         include_keybindings: bool = True,
         include_extensions: bool = True,
         include_snippets: bool = True,
+        *,
+        force: bool = False,
     ) -> None:
         """Actually apply the configurations."""
         console.print("\n[bold]Applying configurations...[/bold]")
@@ -634,9 +664,33 @@ class ApplyCommand:
 
         # Apply extensions
         if include_extensions and merge_result.extensions:
-            self._apply_extensions(
-                app_details, merge_result.extensions, prune_extensions, clean_extensions,
-            )
+            # Show planned extension changes and ask user to proceed (unless forced)
+            proceed_with_extensions = True
+
+            if not force and app_details.executable_path:
+                # Display diff preview similar to dry-run but without the banner
+                console.print("\n[bold]Extension changes preview:[/bold]")
+                self._show_extensions_diff(
+                    app_details,
+                    merge_result.extensions,
+                    prune_extensions,
+                    clean_extensions,
+                )
+
+                proceed_with_extensions = Confirm.ask(
+                    "Proceed with installing/uninstalling these extensions?",
+                    default=True,
+                )
+
+            if proceed_with_extensions:
+                self._apply_extensions(
+                    app_details,
+                    merge_result.extensions,
+                    prune_extensions,
+                    clean_extensions,
+                )
+            else:
+                console.print("[yellow]Skipped managing extensions as per user choice.[/yellow]")
 
     def _apply_tasks(self, app_details: AppDetails, tasks_source: Path) -> None:
         """Apply tasks.json from source layer."""
@@ -764,8 +818,10 @@ class ApplyCommand:
                 local_vsix = AppManager.find_local_vsix(extension)
                 if local_vsix:
                     console.print(f"Installing {extension} from local VSIX: {local_vsix.name}")
+                    console.print("[dim]  (This may take up to 2 minutes for compilation and installation)[/dim]")
                 else:
                     console.print(f"Installing {extension} from marketplace...")
+                    console.print("[dim]  (Timeout: 30 seconds)[/dim]")
 
                 if AppManager.install_extension(app_details, extension):
                     installed_count += 1
