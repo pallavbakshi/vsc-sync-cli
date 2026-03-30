@@ -1,0 +1,3131 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://example.com/vsc-sync-cli/advanced-usage/">
+      
+      
+        <link rel="prev" href="../usage/">
+      
+      
+        <link rel="next" href="../configuration/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Advanced Usage - VSC Sync CLI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#advanced-usage" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="VSC Sync CLI" class="md-header__button md-logo" aria-label="VSC Sync CLI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            VSC Sync CLI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Advanced Usage
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/your-org/vsc-sync-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../usage/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../how-it-works/" class="md-tabs__link">
+          
+  
+  
+  Behind the Scenes
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../for-developers/" class="md-tabs__link">
+          
+  
+  
+  For Developers
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/vsc_sync.md" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="VSC Sync CLI" class="md-nav__button md-logo" aria-label="VSC Sync CLI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    VSC Sync CLI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/your-org/vsc-sync-cli" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorials/quick-start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../template-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Template Config Repo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Usage
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#custom-layer-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Custom Layer System
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Custom Layer System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#understanding-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understanding Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Sources
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Sources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-names-intelligent-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simple Names (Intelligent Resolution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toml-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TOML Aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#literal-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Literal Paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-layer-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Layer Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Layer Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-environment-stacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Environment Stacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-specific-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project-Specific Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-language-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Language Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎮 Layer Presets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎮 Layer Presets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defining-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-preset-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Preset Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Preset Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conditional-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hierarchical-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchical Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#role-based-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Role-Based Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intelligent-layer-resolution-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Intelligent Layer Resolution Deep Dive
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧠 Intelligent Layer Resolution Deep Dive">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-path-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Path Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory-structure-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toml-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 TOML Configuration Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 TOML Configuration Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complete-toml-configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete TOML Configuration Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#managing-toml-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Managing TOML Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Managing TOML Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-component-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔀 Advanced Component Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔀 Advanced Component Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#selective-component-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selective Component Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-management-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension Management Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension Management Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#incremental-extension-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incremental Extension Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#curated-extension-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Curated Extension Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-extension-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Extension Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complex-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 Complex Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 Complex Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-environment-switching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Environment Switching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development Environment Switching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-project-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Project Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#team-collaboration-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Team Collaboration Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Team Collaboration Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onboarding-new-team-members" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Onboarding New Team Members
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-testing-and-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Testing and Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Testing and Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#safe-configuration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe Configuration Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ab-testing-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A/B Testing Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-and-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Monitoring and Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Monitoring and Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-status-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Status Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-resolution-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Resolution Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-installation-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension Installation Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#team-collaboration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Team Collaboration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Behind the Scenes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Behind the Scenes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How It Works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../behind-the-scenes/layer-precedence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Layer Precedence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For Developers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    For Developers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../for-developers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../for-developers/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../for-developers/docs-hosting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Docs Hosting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/vsc_sync.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    vsc_sync
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#custom-layer-system" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Custom Layer System
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Custom Layer System">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#understanding-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Understanding Layers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Sources
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layer Sources">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#simple-names-intelligent-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Simple Names (Intelligent Resolution)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#toml-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TOML Aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#literal-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Literal Paths
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-layer-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Layer Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Layer Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-environment-stacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Environment Stacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#project-specific-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Project-Specific Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-language-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Language Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎮 Layer Presets
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎮 Layer Presets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#defining-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Defining Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Resolution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#advanced-preset-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Preset Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Preset Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conditional-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conditional Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hierarchical-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hierarchical Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#role-based-presets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Role-Based Presets
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#intelligent-layer-resolution-deep-dive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧠 Intelligent Layer Resolution Deep Dive
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🧠 Intelligent Layer Resolution Deep Dive">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-path-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Path Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resolution-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directory-structure-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Directory Structure Conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#toml-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 TOML Configuration Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 TOML Configuration Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#complete-toml-configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete TOML Configuration Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#managing-toml-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Managing TOML Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Managing TOML Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validate-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validate Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-component-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔀 Advanced Component Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔀 Advanced Component Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#selective-component-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selective Component Application
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-management-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension Management Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Extension Management Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#incremental-extension-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Incremental Extension Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#curated-extension-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Curated Extension Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#local-extension-fallback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Local Extension Fallback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complex-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 Complex Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔄 Complex Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#development-environment-switching" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Environment Switching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development Environment Switching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-development" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Development
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-project-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Project Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#team-collaboration-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Team Collaboration Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Team Collaboration Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shared-configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shared Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#onboarding-new-team-members" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Onboarding New Team Members
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-testing-and-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Testing and Validation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Testing and Validation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#safe-configuration-testing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Safe Configuration Testing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ab-testing-configurations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A/B Testing Configurations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-and-troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📊 Monitoring and Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📊 Monitoring and Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#configuration-status-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Status Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#layer-resolution-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Resolution Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-installation-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extension Installation Debugging
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🎯 Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🎯 Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#layer-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer Organization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#preset-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preset Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#team-collaboration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Team Collaboration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="advanced-usage">Advanced Usage</h1>
+<p>This guide covers advanced features of vsc-sync including the custom layer system, TOML configuration, layer presets, and sophisticated workflows.</p>
+<hr />
+<h2 id="custom-layer-system">🎯 Custom Layer System</h2>
+<p>The custom layer system is vsc-sync's most powerful feature, allowing you to explicitly control layer ordering and mix different configuration sources.</p>
+<h3 id="understanding-layers">Understanding Layers</h3>
+<p>Layers are applied in order, with the first <code>--layer</code> being the base and subsequent layers stacking on top:</p>
+<pre><code class="language-bash">vsc-sync apply vscode --settings \
+  --layer base \        # Foundation settings (applied first)
+  --layer python \      # Python-specific settings  
+  --layer vscode \      # VSCode-specific settings
+  --layer work \        # Work environment settings
+  --layer personal      # Personal preference overrides (applied last, takes precedence)
+</code></pre>
+<h3 id="layer-sources">Layer Sources</h3>
+<p>Each layer can come from three different sources:</p>
+<ol>
+<li><strong>Simple Names</strong> (intelligent resolution)</li>
+<li><strong>TOML Aliases</strong> (from config.toml)  </li>
+<li><strong>Literal Paths</strong> (file or directory)</li>
+</ol>
+<h4 id="simple-names-intelligent-resolution">Simple Names (Intelligent Resolution)</h4>
+<p>vsc-sync automatically searches your vscode-configs directory:</p>
+<pre><code>~/vscode-configs/
+├── base/                   # --layer base
+├── apps/
+│   ├── vscode/            # --layer vscode
+│   ├── cursor/            # --layer cursor
+│   └── windsurf/          # --layer windsurf
+├── stacks/
+│   ├── python/            # --layer python
+│   ├── web/               # --layer web
+│   └── typescript/        # --layer typescript
+└── projects/
+    ├── my-app/            # --layer my-app
+    └── api-server/        # --layer api-server
+</code></pre>
+<p>Search order for name resolution:
+1. <code>~/vscode-configs/{name}/</code>
+2. <code>~/vscode-configs/apps/{name}/</code>
+3. <code>~/vscode-configs/stacks/{name}/</code>
+4. <code>~/vscode-configs/projects/{name}/</code></p>
+<h4 id="toml-aliases">TOML Aliases</h4>
+<p>Define custom aliases in your <code>~/.config/vsc-sync/config.toml</code>:</p>
+<pre><code class="language-toml">[layer_aliases.work]
+name = &quot;work&quot;
+path = &quot;/company/shared/vscode-config&quot;
+description = &quot;Company-wide settings&quot;
+
+[layer_aliases.personal]
+name = &quot;personal&quot;
+path = &quot;~/my-personal-configs/vscode.json&quot;
+description = &quot;Personal preference overrides&quot;
+
+[layer_aliases.project-x]
+name = &quot;project-x&quot;
+path = &quot;~/projects/project-x/.vscode-config&quot;
+description = &quot;Project X specific settings&quot;
+</code></pre>
+<p>Usage:</p>
+<pre><code class="language-bash">vsc-sync apply vscode --settings \
+  --layer base \
+  --layer work \        # Resolves to /company/shared/vscode-config
+  --layer personal      # Resolves to ~/my-personal-configs/vscode.json
+</code></pre>
+<h4 id="literal-paths">Literal Paths</h4>
+<p>Specify exact file or directory paths:</p>
+<pre><code class="language-bash">vsc-sync apply vscode --settings \
+  --layer ~/vscode-configs/base \
+  --layer /shared/team-settings \
+  --layer ./project-specific-config.json
+</code></pre>
+<h3 id="advanced-layer-examples">Advanced Layer Examples</h3>
+<h4 id="development-environment-stacks">Development Environment Stacks</h4>
+<pre><code class="language-bash"># Python data science setup
+vsc-sync apply vscode --all \
+  --layer base \
+  --layer python \
+  --layer data-science \
+  --layer jupyter
+
+# Full-stack web development
+vsc-sync apply cursor --all \
+  --layer base \
+  --layer javascript \
+  --layer react \
+  --layer nodejs \
+  --layer personal
+</code></pre>
+<h4 id="project-specific-configurations">Project-Specific Configurations</h4>
+<pre><code class="language-bash"># Client project with specific requirements
+vsc-sync apply vscode --config \
+  --layer base \
+  --layer company-standard \
+  --layer client-project \
+  --layer ~/projects/client-app/.vscode-overrides
+
+# Open source project
+vsc-sync apply windsurf --all \
+  --layer base \
+  --layer open-source \
+  --layer typescript \
+  --layer personal
+</code></pre>
+<h4 id="multi-language-development">Multi-Language Development</h4>
+<pre><code class="language-bash"># Polyglot developer setup
+vsc-sync apply vscode --settings \
+  --layer base \
+  --layer python \
+  --layer javascript \  # Multiple layers of same level
+  --layer rust \
+  --layer personal
+</code></pre>
+<hr />
+<h2 id="layer-presets">🎮 Layer Presets</h2>
+<p>Layer presets allow you to define common layer combinations once and reuse them everywhere.</p>
+<h3 id="defining-presets">Defining Presets</h3>
+<p>In your <code>~/.config/vsc-sync/config.toml</code>:</p>
+<pre><code class="language-toml">[layer_presets]
+# Development environments
+python-dev = [&quot;base&quot;, &quot;python&quot;, &quot;personal&quot;]
+web-dev = [&quot;base&quot;, &quot;javascript&quot;, &quot;web&quot;, &quot;personal&quot;]
+fullstack = [&quot;base&quot;, &quot;javascript&quot;, &quot;python&quot;, &quot;web&quot;, &quot;personal&quot;]
+data-science = [&quot;base&quot;, &quot;python&quot;, &quot;jupyter&quot;, &quot;data-science&quot;]
+
+# Project types
+startup = [&quot;base&quot;, &quot;startup&quot;, &quot;fast-iteration&quot;, &quot;personal&quot;]
+enterprise = [&quot;base&quot;, &quot;company-standard&quot;, &quot;enterprise&quot;, &quot;personal&quot;]
+open-source = [&quot;base&quot;, &quot;open-source&quot;, &quot;community&quot;, &quot;personal&quot;]
+
+# Specialized workflows
+debugging = [&quot;base&quot;, &quot;debugging&quot;, &quot;logging&quot;, &quot;personal&quot;]
+testing = [&quot;base&quot;, &quot;testing&quot;, &quot;ci-cd&quot;, &quot;personal&quot;]
+presentation = [&quot;base&quot;, &quot;presentation&quot;, &quot;clean-ui&quot;, &quot;minimal&quot;]
+
+# Editor-specific
+vscode-power = [&quot;base&quot;, &quot;vscode&quot;, &quot;extensions-heavy&quot;, &quot;personal&quot;]
+cursor-ai = [&quot;base&quot;, &quot;cursor&quot;, &quot;ai-enhanced&quot;, &quot;personal&quot;]
+minimal-setup = [&quot;base&quot;, &quot;minimal&quot;]
+</code></pre>
+<h3 id="using-presets">Using Presets</h3>
+<pre><code class="language-bash"># Apply complete development environments
+vsc-sync apply vscode --all --preset python-dev
+vsc-sync apply cursor --all --preset web-dev
+vsc-sync apply windsurf --config --preset enterprise
+
+# Combine with other flags
+vsc-sync apply vscode --extensions --preset debugging
+vsc-sync apply cursor --settings --keybindings --preset presentation
+</code></pre>
+<h3 id="preset-resolution">Preset Resolution</h3>
+<p>Presets resolve each layer name using the same three-tier strategy:
+1. Intelligent name resolution
+2. TOML alias resolution<br />
+3. Literal path resolution</p>
+<pre><code class="language-toml"># This preset mixes all resolution types
+mixed-preset = [
+  &quot;base&quot;,                    # Intelligent: ~/vscode-configs/base/
+  &quot;company&quot;,                 # Alias: /company/shared/config
+  &quot;~/custom/personal.json&quot;   # Literal path
+]
+</code></pre>
+<h3 id="advanced-preset-patterns">Advanced Preset Patterns</h3>
+<h4 id="conditional-presets">Conditional Presets</h4>
+<pre><code class="language-toml"># Different presets for different contexts
+[layer_presets]
+work-python = [&quot;base&quot;, &quot;company&quot;, &quot;python&quot;, &quot;work-personal&quot;]
+home-python = [&quot;base&quot;, &quot;python&quot;, &quot;home-personal&quot;, &quot;experimental&quot;]
+demo-python = [&quot;base&quot;, &quot;python&quot;, &quot;presentation&quot;, &quot;minimal&quot;]
+</code></pre>
+<h4 id="hierarchical-presets">Hierarchical Presets</h4>
+<pre><code class="language-toml"># Build complexity gradually
+[layer_presets]
+minimal = [&quot;base&quot;]
+basic-python = [&quot;base&quot;, &quot;python&quot;]
+python-dev = [&quot;base&quot;, &quot;python&quot;, &quot;development&quot;]
+python-full = [&quot;base&quot;, &quot;python&quot;, &quot;development&quot;, &quot;testing&quot;, &quot;personal&quot;]
+</code></pre>
+<h4 id="role-based-presets">Role-Based Presets</h4>
+<pre><code class="language-toml"># Different roles, different configs
+[layer_presets]
+backend-dev = [&quot;base&quot;, &quot;python&quot;, &quot;api&quot;, &quot;database&quot;, &quot;personal&quot;]
+frontend-dev = [&quot;base&quot;, &quot;javascript&quot;, &quot;react&quot;, &quot;design&quot;, &quot;personal&quot;]
+devops = [&quot;base&quot;, &quot;infrastructure&quot;, &quot;ci-cd&quot;, &quot;monitoring&quot;, &quot;personal&quot;]
+data-scientist = [&quot;base&quot;, &quot;python&quot;, &quot;jupyter&quot;, &quot;ml&quot;, &quot;visualization&quot;]
+</code></pre>
+<hr />
+<h2 id="intelligent-layer-resolution-deep-dive">🧠 Intelligent Layer Resolution Deep Dive</h2>
+<h3 id="configuration-path-setup">Configuration Path Setup</h3>
+<p>The intelligent resolution system relies on the <code>vscode_configs_path</code> in your TOML config:</p>
+<pre><code class="language-toml"># ~/.config/vsc-sync/config.toml
+vscode_configs_path = &quot;~/vscode-configs&quot;
+</code></pre>
+<h3 id="resolution-algorithm">Resolution Algorithm</h3>
+<p>When you specify a layer name, vsc-sync follows this resolution order:</p>
+<pre><code class="language-python">def resolve_layer_spec(layer_name):
+    # 1. Try intelligent name resolution
+    for directory in [&quot;&quot;, &quot;apps/&quot;, &quot;stacks/&quot;, &quot;projects/&quot;]:
+        path = vscode_configs_path / directory / layer_name
+        if path.exists():
+            return path
+
+    # 2. Try alias resolution
+    if layer_name in toml_config.layer_aliases:
+        return toml_config.layer_aliases[layer_name].path
+
+    # 3. Try literal path resolution
+    path = Path(layer_name)
+    return path  # Return as-is (may or may not exist)
+</code></pre>
+<h3 id="directory-structure-conventions">Directory Structure Conventions</h3>
+<p>The intelligent resolution works best with this recommended structure:</p>
+<pre><code>~/vscode-configs/
+├── base/                           # Core settings for all setups
+│   ├── settings.json
+│   ├── keybindings.json
+│   └── extensions.json
+├── apps/                           # Editor-specific configurations
+│   ├── vscode/
+│   │   ├── settings.json           # VSCode-specific settings
+│   │   └── extensions.json         # VSCode-specific extensions
+│   ├── cursor/
+│   │   ├── settings.json           # Cursor-specific settings
+│   │   └── extensions.json         # AI-enhanced extensions
+│   └── windsurf/
+│       └── settings.json           # Windsurf-specific settings
+├── stacks/                         # Technology stack configurations
+│   ├── python/
+│   │   ├── settings.json           # Python development settings
+│   │   ├── extensions.json         # Python-related extensions
+│   │   └── snippets/
+│   │       └── python.json         # Python code snippets
+│   ├── javascript/
+│   │   ├── settings.json           # JS/TS development settings
+│   │   ├── extensions.json         # JavaScript extensions
+│   │   └── keybindings.json        # JS-specific key bindings
+│   └── web/
+│       ├── settings.json           # Web development settings
+│       └── extensions.json         # Web development extensions
+├── projects/                       # Project-specific configurations
+│   ├── my-react-app/
+│   │   ├── settings.json           # Project-specific settings
+│   │   └── tasks.json              # Project build tasks
+│   └── api-server/
+│       ├── settings.json
+│       └── launch.json             # Debug configurations
+└── environments/                   # Environment-specific configs
+    ├── work/
+    │   ├── settings.json
+    │   └── extensions.json
+    └── personal/
+        ├── settings.json
+        └── keybindings.json
+</code></pre>
+<hr />
+<h2 id="toml-configuration-management">🔧 TOML Configuration Management</h2>
+<h3 id="complete-toml-configuration-reference">Complete TOML Configuration Reference</h3>
+<pre><code class="language-toml"># ~/.config/vsc-sync/config.toml
+
+# Path to vscode-configs repository for intelligent layer resolution
+vscode_configs_path = &quot;~/vscode-configs&quot;
+
+# Default settings applied when no flags specified
+[defaults]
+components = [&quot;settings&quot;, &quot;keybindings&quot;, &quot;extensions&quot;]
+backup = true
+extension_mode = &quot;add&quot;  # &quot;add&quot;, &quot;remove-extra&quot;, &quot;replace-all&quot;
+
+# Layer aliases for custom paths and external configurations
+[layer_aliases.work]
+name = &quot;work&quot;
+path = &quot;/company/shared/vscode-config&quot;
+description = &quot;Company-wide development standards&quot;
+
+[layer_aliases.personal]
+name = &quot;personal&quot;
+path = &quot;~/my-configs/personal.json&quot;
+description = &quot;Personal preference overrides&quot;
+
+[layer_aliases.legacy]
+name = &quot;legacy&quot;
+path = &quot;~/old-configs/legacy-settings&quot;
+description = &quot;Legacy project compatibility settings&quot;
+
+# Layer presets for common workflows
+[layer_presets]
+# Development environments
+python-dev = [&quot;base&quot;, &quot;python&quot;, &quot;personal&quot;]
+web-dev = [&quot;base&quot;, &quot;javascript&quot;, &quot;web&quot;, &quot;personal&quot;]
+fullstack = [&quot;base&quot;, &quot;python&quot;, &quot;javascript&quot;, &quot;web&quot;, &quot;personal&quot;]
+
+# Project types
+startup = [&quot;base&quot;, &quot;fast&quot;, &quot;experimental&quot;, &quot;personal&quot;]
+enterprise = [&quot;base&quot;, &quot;work&quot;, &quot;security&quot;, &quot;compliance&quot;]
+open-source = [&quot;base&quot;, &quot;community&quot;, &quot;documentation&quot;, &quot;personal&quot;]
+
+# Specialized workflows
+debugging = [&quot;base&quot;, &quot;debug&quot;, &quot;logging&quot;, &quot;verbose&quot;]
+testing = [&quot;base&quot;, &quot;testing&quot;, &quot;ci&quot;, &quot;coverage&quot;]
+demo = [&quot;base&quot;, &quot;presentation&quot;, &quot;clean&quot;, &quot;minimal&quot;]
+
+# Editor-specific configurations  
+[editor_settings.vscode]
+auto_backup = true
+extension_timeout = 10
+marketplace_fallback = true
+
+[editor_settings.cursor]
+auto_backup = true
+extension_timeout = 15
+ai_features = true
+
+[editor_settings.windsurf]
+auto_backup = false
+extension_timeout = 10
+</code></pre>
+<h3 id="managing-toml-configuration">Managing TOML Configuration</h3>
+<h4 id="view-configuration">View Configuration</h4>
+<pre><code class="language-bash"># Show complete configuration
+vsc-sync config --show
+
+# Show just the file path
+vsc-sync config --path
+</code></pre>
+<h4 id="edit-configuration">Edit Configuration</h4>
+<pre><code class="language-bash"># Open in your default editor
+vsc-sync config --edit
+
+# Initialize with example configuration
+vsc-sync config --init
+</code></pre>
+<h4 id="validate-configuration">Validate Configuration</h4>
+<pre><code class="language-bash"># Check if your configuration is valid
+vsc-sync config --show | head -10
+</code></pre>
+<hr />
+<h2 id="advanced-component-management">🔀 Advanced Component Management</h2>
+<h3 id="selective-component-application">Selective Component Application</h3>
+<p>Apply different components with different layer combinations:</p>
+<pre><code class="language-bash"># Apply settings and keybindings with full stack
+vsc-sync apply vscode --settings --keybindings \
+  --layer base --layer python --layer personal
+
+# Apply only extensions with minimal layers
+vsc-sync apply vscode --extensions \
+  --layer base --layer python
+
+# Apply snippets from specific project
+vsc-sync apply vscode --snippets \
+  --layer base --layer my-project
+</code></pre>
+<h3 id="extension-management-strategies">Extension Management Strategies</h3>
+<h4 id="incremental-extension-management">Incremental Extension Management</h4>
+<pre><code class="language-bash"># Default: Only install missing extensions
+vsc-sync apply vscode --extensions --layer base --layer python
+
+# Add project-specific extensions
+vsc-sync apply vscode --extensions --layer base --layer current-project
+</code></pre>
+<h4 id="curated-extension-management">Curated Extension Management</h4>
+<pre><code class="language-bash"># Remove extensions not in configuration
+vsc-sync apply vscode --extensions --remove-extra \
+  --preset python-dev
+
+# Clean slate: remove all, reinstall from config
+vsc-sync apply vscode --extensions --replace-all \
+  --preset minimal
+</code></pre>
+<h4 id="local-extension-fallback">Local Extension Fallback</h4>
+<p>When marketplace fails, vsc-sync searches <code>~/Documents/vscode-extension/</code>:</p>
+<pre><code class="language-bash"># Your local extension directory
+ls ~/Documents/vscode-extension/
+# ms-python.python.vsix
+# ms-python.python-2023.1.0.vsix
+# github.copilot-1.67.7.vsix
+# publisher.extension.vsix
+</code></pre>
+<p>Supported filename patterns:
+- <code>{publisher}.{extension}.vsix</code>
+- <code>{publisher}.{extension}-{version}.vsix</code></p>
+<hr />
+<h2 id="complex-workflows">🔄 Complex Workflows</h2>
+<h3 id="development-environment-switching">Development Environment Switching</h3>
+<h4 id="context-aware-development">Context-Aware Development</h4>
+<pre><code class="language-bash"># Morning: Start with clean environment
+vsc-sync apply vscode --all --preset minimal
+
+# Switch to Python project
+vsc-sync apply vscode --config --preset python-dev
+
+# Add project-specific settings
+vsc-sync apply vscode --settings \
+  --layer base --layer python --layer current-project
+
+# Evening: Switch to personal projects
+vsc-sync apply vscode --all --preset personal-dev
+</code></pre>
+<h4 id="multi-project-management">Multi-Project Management</h4>
+<pre><code class="language-bash"># Set up project A
+vsc-sync apply vscode --all \
+  --layer base --layer web --layer project-a
+
+# Quick switch to project B (same base, different project)
+vsc-sync apply vscode --settings --tasks \
+  --layer base --layer web --layer project-b
+
+# Debugging project C with enhanced tools
+vsc-sync apply vscode --all \
+  --layer base --layer debugging --layer project-c
+</code></pre>
+<h3 id="team-collaboration-workflows">Team Collaboration Workflows</h3>
+<h4 id="shared-configuration-management">Shared Configuration Management</h4>
+<pre><code class="language-bash"># Pull team updates
+cd ~/vscode-configs
+git pull origin main
+
+# Apply team standard with personal overrides
+vsc-sync apply vscode --all \
+  --layer base --layer team-standard --layer personal
+
+# Push personal improvements back to shared layers
+vsc-sync pull vscode --to stack team-improvements \
+  --settings --keybindings
+</code></pre>
+<h4 id="onboarding-new-team-members">Onboarding New Team Members</h4>
+<pre><code class="language-bash"># Clone team repository
+vsc-sync init --repo git@company.com:team/vscode-configs.git
+
+# Apply team preset
+vsc-sync apply vscode --all --preset team-standard
+
+# Add personal customizations
+vsc-sync config --edit
+# Add personal preset: [&quot;base&quot;, &quot;team-standard&quot;, &quot;personal&quot;]
+</code></pre>
+<h3 id="configuration-testing-and-validation">Configuration Testing and Validation</h3>
+<h4 id="safe-configuration-testing">Safe Configuration Testing</h4>
+<pre><code class="language-bash"># Preview changes without applying
+vsc-sync apply vscode --all --preset experimental --dry-run
+
+# Test in secondary editor first
+vsc-sync apply cursor --config --preset experimental
+
+# Apply to main editor if satisfied
+vsc-sync apply vscode --all --preset experimental
+</code></pre>
+<h4 id="ab-testing-configurations">A/B Testing Configurations</h4>
+<pre><code class="language-bash"># Setup A: Current production config
+vsc-sync apply vscode --all --preset production
+
+# Setup B: Test new configuration
+vsc-sync apply cursor --all --preset experimental
+
+# Compare and decide
+vsc-sync status vscode
+vsc-sync status cursor
+</code></pre>
+<hr />
+<h2 id="monitoring-and-troubleshooting">📊 Monitoring and Troubleshooting</h2>
+<h3 id="configuration-status-monitoring">Configuration Status Monitoring</h3>
+<pre><code class="language-bash"># Check overall status
+vsc-sync status
+
+# Check specific editor with layers
+vsc-sync status vscode --stack python --stack web
+
+# Check configuration differences
+vsc-sync apply vscode --all --preset python-dev --dry-run
+</code></pre>
+<h3 id="layer-resolution-debugging">Layer Resolution Debugging</h3>
+<pre><code class="language-bash"># Check what layers would be resolved
+vsc-sync config --show
+
+# Verify vscode_configs_path
+ls -la $(vsc-sync config --show | grep vscode_configs_path | cut -d'&quot;' -f2)
+
+# Test specific layer resolution
+vsc-sync apply vscode --settings --layer python --dry-run
+</code></pre>
+<h3 id="extension-installation-debugging">Extension Installation Debugging</h3>
+<pre><code class="language-bash"># Check marketplace connectivity
+vsc-sync apply vscode --extensions --dry-run
+
+# Check local VSIX files
+ls -la ~/Documents/vscode-extension/
+
+# Force marketplace-only (skip local fallback)
+# Currently not available - feature request
+</code></pre>
+<hr />
+<h2 id="best-practices">🎯 Best Practices</h2>
+<h3 id="layer-organization">Layer Organization</h3>
+<ol>
+<li><strong>Keep base minimal</strong>: Only essential settings in base layer</li>
+<li><strong>Use specific layers</strong>: Create focused layers for specific purposes</li>
+<li><strong>Personal overrides last</strong>: Always apply personal layer last</li>
+<li><strong>Document layers</strong>: Use clear descriptions in TOML aliases</li>
+</ol>
+<h3 id="preset-design">Preset Design</h3>
+<ol>
+<li><strong>Start simple</strong>: Begin with minimal presets, build complexity</li>
+<li><strong>Use descriptive names</strong>: <code>python-dev</code> not <code>p1</code></li>
+<li><strong>Group by purpose</strong>: Development, testing, presentation, etc.</li>
+<li><strong>Test thoroughly</strong>: Validate presets work in different contexts</li>
+</ol>
+<h3 id="configuration-management">Configuration Management</h3>
+<ol>
+<li><strong>Version control</strong>: Keep vscode-configs in Git</li>
+<li><strong>Backup before changes</strong>: Let vsc-sync handle backups</li>
+<li><strong>Test in isolation</strong>: Use different editors for testing</li>
+<li><strong>Document workflows</strong>: Comment your TOML configuration</li>
+</ol>
+<h3 id="team-collaboration">Team Collaboration</h3>
+<ol>
+<li><strong>Shared base</strong>: Common base layer for team consistency</li>
+<li><strong>Personal freedom</strong>: Allow personal override layers</li>
+<li><strong>Clear conventions</strong>: Establish naming conventions for layers</li>
+<li><strong>Regular updates</strong>: Keep shared layers updated and tested</li>
+</ol>
+<p>This advanced usage guide covers the most sophisticated features of vsc-sync. For basic usage, see the <a href="../usage/">Usage Guide</a>. For initial setup, see the <a href="../tutorials/quick-start/">Quick Start</a>.</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date" title="June 24, 2025 14:41:15 UTC">June 24, 2025</span>
+  </span>
+
+    
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tabs", "navigation.sections", "search.highlight", "search.suggest", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
